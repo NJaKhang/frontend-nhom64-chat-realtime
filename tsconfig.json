@@ -19,7 +19,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    ,"paths": {
+    "paths": {
       "@constants/*": ["./src/constants/*"],
       "@models/*": ["./src/models/*"],
       "@services/*": ["./src/services/*"],
