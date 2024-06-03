@@ -1,3 +1,5 @@
-export default interface ChatType{
 
+export  enum ChatType{
+    Group = "group",
+    People = "people"
 }

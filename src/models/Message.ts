@@ -1,4 +1,4 @@
-import ChatType from "@constants/ChatType.ts";
+import {ChatType} from "@constants/ChatType.ts";
 
 export default  interface Message{
     id: number
