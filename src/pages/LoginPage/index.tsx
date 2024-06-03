@@ -1,10 +1,11 @@
-import React from 'react';
+import LoginPane from "../../layouts/LoginPane";
+
 
 const LoginPage = () => {
-    return (
-        <div>
 
-        </div>
+
+    return (
+        <LoginPane/>
     );
 };
 
