@@ -8,6 +8,7 @@ export default function OutlinedInput(theme: Theme) {
     MuiOutlinedInput: {
       styleOverrides: {
         input: {
+          boxSizing: "content-box !important",
           padding: "10.5px 14px 10.5px 12px",
         },
         notchedOutline: {

@@ -6,7 +6,9 @@ export default {
         backgroundColor: "background.paper",
         alignItems: "center",
         padding: 0.5,
-        borderRadius: 1
+        borderRadius: 1,
+        boxShadow: " rgba(27, 31, 35, 0.04) 0px 1px 0px, rgba(255, 255, 255, 0.25) 0px 1px 0px inset;",
+
     },
     input: {
         border: "none",
