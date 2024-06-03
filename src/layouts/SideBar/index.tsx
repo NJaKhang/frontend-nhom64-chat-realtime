@@ -1,10 +1,16 @@
+import {Box} from "@mui/material";
 import React from 'react';
 
 const SideBar = () => {
     return (
-        <div>
+        <Box
+            sx={{
+                gridArea: "sidebar",
+                width: "72px",
+                backgroundColor: "#123456"
+            }}>
             
-        </div>
+        </Box>
     );
 };
 

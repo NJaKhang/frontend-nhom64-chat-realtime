@@ -10,11 +10,11 @@ import './index.css'
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
         <Provider store={store}>
-            <StrictMode>
+            {/*<StrictMode>*/}
                 <ThemeCustomization>
                     <App/>
                 </ThemeCustomization>
-            </StrictMode>
+            {/*</StrictMode>*/}
         </Provider>
     </BrowserRouter>
 )

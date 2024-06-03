@@ -1,10 +1,15 @@
+import {Box} from "@mui/material";
 import React from 'react';
 
 const RoomList = () => {
     return (
-        <div>
+        <Box sx={{
+            gridArea: "room-list",
+            width: "260px",
 
-        </div>
+        }}>
+
+        </Box>
     );
 };
 
