@@ -1,5 +1,4 @@
 import {ChatType} from "@constants/ChatType.ts";
-import {useAuthAction} from "@features/auth/authSlice.ts";
 import {useChatAction, useChatSelector} from "@features/chat/chatSlice.ts";
 import MessageRes from "@models/Message.ts";
 import {Box, Theme} from "@mui/material";
@@ -18,17 +17,20 @@ const ChatPane = () => {
     const {target, type, newMessages} = useChatSelector();
     const dispatch = useAppDispatch();
     const {addNewMessage} = useChatAction()
+    const [loading, setLoading] = useState(false)
     useEffect(() => {
-        console.log("chat pane");
+        setLoading(true)
         chatService.findPeopleChats(target)
             .then((data) => {
-            setMessages(data)
-            console.log(data)
-        }).catch((error) => console.log(error))
+                setMessages(data)
+                console.log(data)
+            })
+            .then(() => setLoading(false))
+            .catch((error) => console.log(error))
 
         socketService.receiveMessageHandler = (message) => {
             console.log(message)
-            if (message.name === target){
+            if (message.name === target) {
                 setMessages(prevState => [message, ...prevState])
             } else {
                 dispatch(addNewMessage(message))
@@ -38,7 +40,7 @@ const ChatPane = () => {
 
     useEffect(() => {
         const temp = newMessages.filter(mes => mes.name == target && chatType[mes.type] == type);
-        if(temp.length == 0)
+        if (temp.length == 0)
             return
         else {
             setMessages((prev) => [...prev, ...messages])
@@ -63,7 +65,7 @@ const ChatPane = () => {
                 }}
             >
                 <ChatHeader/>
-                <MessageScroll messages={messages}/>
+                <MessageScroll messages={messages} loading={loading}/>
                 <ChatInput onSubmit={(message) => setMessages([message, ...messages])}/>
             </Box>
         </Box>

@@ -10,7 +10,7 @@ interface ChatState {
 }
 
 const initialState: ChatState = {
-    target: "21130326",
+    target: "21130315",
     newMessages: [],
     type: ChatType.People
 }
