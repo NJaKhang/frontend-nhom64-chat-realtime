@@ -1,5 +1,6 @@
 import {SocketEvent} from "@constants/SocketEvent.ts";
 import LoginRequest from "@models/LoginRequest.ts";
+import RegisterRequest from "@models/RegisterRequest.ts";
 import {SocketResponse} from "@models/SocketResponse.ts";
 import User from "@models/User.ts";
 import socketService from "@services/SocketService.ts";
@@ -18,10 +19,8 @@ class AuthService {
             })
         })
     }
-
     async reLogin(user: User) {
         return new Promise<User>((resolve, reject) => {
-            console.log(user)
             socketService.send(SocketEvent.ReLogin, {
                 user: user.name,
                 code: user.code
@@ -29,6 +28,28 @@ class AuthService {
                 onSuccess: (data) => {
                     console.log(data)
                     resolve({name: user.name, code: data.data["RE_LOGIN_CODE"]} as User)
+                },
+                onError: data => reject(data)
+            })
+        })
+    }
+
+    async register(request: RegisterRequest){
+        return new Promise<string>((resolve, reject) => {
+            socketService.send(SocketEvent.Register, request,{
+                onSuccess: (data) => {
+                    resolve(data.data)
+                },
+                onError: data => reject(data)
+            })
+        })
+    }
+
+    async logout() {
+        return new Promise<string>((resolve, reject) => {
+            socketService.send(SocketEvent.Logout,undefined,{
+                onSuccess: (data) => {
+                    resolve(data.data)
                 },
                 onError: data => reject(data)
             })

@@ -1,5 +1,6 @@
 import {SocketEvent} from "@constants/SocketEvent.ts";
 import Message from "@models/Message.ts";
+import RoomChat from "@models/RoomChat.ts";
 import {SocketResponse} from "@models/SocketResponse.ts";
 import socketService from "@services/SocketService.ts";
 
@@ -17,7 +18,7 @@ class ChatService {
                         resolve(messages)
                     },
                     onError: data => {
-                        reject(data.data)
+                        reject(data)
                     }
                 })
         })
@@ -27,9 +28,24 @@ class ChatService {
         socketService.send(SocketEvent.SendChat, {
             type: "people",
             mes: message,
-            to:  target
+            to: target
 
         })
+    }
+
+    async findRoomChat() {
+        return new Promise<RoomChat[]>((resolve, reject) =>
+            socketService.send(SocketEvent.GetUserList, undefined, {
+                onError: error => {
+                    reject(error)
+                },
+                onSuccess: ({data}: SocketResponse<any[]>) => {
+                    resolve(data.map((d) =>{
+                        return  {name: d.name, type: d.type, actionTime: new Date(d.actionTime)} as RoomChat
+                    }))
+                }
+            })
+        )
     }
 }
 

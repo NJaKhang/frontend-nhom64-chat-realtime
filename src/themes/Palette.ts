@@ -92,7 +92,7 @@ const Palette = (...mode: any) => {
         disabled: paletteColor.grey[400]
       },
       action: {
-        disabled: paletteColor.grey[300]
+        disabled: paletteColor.grey[200]
       },
       divider: paletteColor.grey[200],
       background: {

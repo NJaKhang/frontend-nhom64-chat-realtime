@@ -19,7 +19,7 @@ const Message = ({message, showAvatar}: MessageProps) => {
 
     }, [target]);
 
-    const isOwner = user.name == message.name
+    const isOwner = user && user.name == message.name
 
     return (
         <Box display="flex" justifyContent={isOwner ? "flex-end" : "flex-start"} alignItems="flex-end">
