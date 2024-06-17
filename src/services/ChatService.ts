@@ -1,3 +1,4 @@
+import {ChatType} from "@constants/ChatType.ts";
 import {SocketEvent} from "@constants/SocketEvent.ts";
 import Message from "@models/Message.ts";
 import RoomChat from "@models/RoomChat.ts";
@@ -40,8 +41,8 @@ class ChatService {
                     reject(error)
                 },
                 onSuccess: ({data}: SocketResponse<any[]>) => {
-                    resolve(data.map((d) =>{
-                        return  {name: d.name, type: d.type, actionTime: new Date(d.actionTime)} as RoomChat
+                    resolve(data.map((d) => {
+                        return {name: d.name, type: d.type, actionTime: new Date(d.actionTime)} as RoomChat
                     }))
                 }
             })

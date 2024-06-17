@@ -2,7 +2,9 @@ import {ChatType} from "@constants/ChatType.ts";
 import {useChatAction, useChatSelector} from "@features/chat/chatSlice.ts";
 import MessageRes from "@models/Message.ts";
 import {Box, Theme} from "@mui/material";
+import {useAppDispatch} from "@redux/store.ts";
 import chatService from "@services/ChatService.ts";
+import socketService from "@services/SocketService.ts";
 import React, {useEffect, useState} from 'react';
 import ChatHeader from "../../components/ChatHeader";
 import ChatInput from "../../components/ChatInput";
@@ -13,20 +15,32 @@ const chatType = [ChatType.People, ChatType.Group]
 const ChatPane = () => {
     const [messages, setMessages] = useState<MessageRes[]>([])
     const {target, type, newMessages} = useChatSelector();
-    const {removeNewMessage} = useChatAction();
-
+    const dispatch = useAppDispatch();
+    const {addNewMessage} = useChatAction()
+    const [loading, setLoading] = useState(false)
     useEffect(() => {
-        console.log("chat pane");
+        setLoading(true)
         chatService.findPeopleChats(target)
             .then((data) => {
-            setMessages(data)
-            console.log(data)
-        }).catch((error) => console.log(error))
+                setMessages(data)
+                console.log(data)
+            })
+            .then(() => setLoading(false))
+            .catch((error) => console.log(error))
+
+        socketService.receiveMessageHandler = (message) => {
+            console.log(message)
+            if (message.name === target) {
+                setMessages(prevState => [message, ...prevState])
+            } else {
+                dispatch(addNewMessage(message))
+            }
+        }
     }, [target, type])
 
     useEffect(() => {
         const temp = newMessages.filter(mes => mes.name == target && chatType[mes.type] == type);
-        if(temp.length == 0)
+        if (temp.length == 0)
             return
         else {
             setMessages((prev) => [...prev, ...messages])
@@ -51,7 +65,7 @@ const ChatPane = () => {
                 }}
             >
                 <ChatHeader/>
-                <MessageScroll messages={messages}/>
+                <MessageScroll messages={messages} loading={loading}/>
                 <ChatInput onSubmit={(message) => setMessages([message, ...messages])}/>
             </Box>
         </Box>
