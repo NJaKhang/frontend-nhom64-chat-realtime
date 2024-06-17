@@ -1,4 +1,5 @@
 import {ChatType} from "@constants/ChatType.ts";
+import {useChatSelector} from "@features/chat/chatSlice.ts";
 import RoomChat from "@models/RoomChat.ts";
 import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
 import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
@@ -24,6 +25,7 @@ const RoomList = () => {
 
     const [value, setValue] = React.useState(ChatType.People);
     const [rooms, setRooms] = useState<RoomChat[]>([])
+    const {newMessages} = useChatSelector();
     const handleChange = (event: React.SyntheticEvent, newValue: ChatType) => {
         setValue(newValue);
     };
@@ -31,6 +33,8 @@ const RoomList = () => {
     useEffect(() => {
         chatService.findRoomChat().then((rooms) => setRooms(rooms))
     }, []);
+
+    console.log(rooms)
 
     return (
         <Box sx={{

@@ -1,8 +1,11 @@
 import {ChatType} from "@constants/ChatType.ts";
+import {useAuthAction} from "@features/auth/authSlice.ts";
 import {useChatAction, useChatSelector} from "@features/chat/chatSlice.ts";
 import MessageRes from "@models/Message.ts";
 import {Box, Theme} from "@mui/material";
+import {useAppDispatch} from "@redux/store.ts";
 import chatService from "@services/ChatService.ts";
+import socketService from "@services/SocketService.ts";
 import React, {useEffect, useState} from 'react';
 import ChatHeader from "../../components/ChatHeader";
 import ChatInput from "../../components/ChatInput";
@@ -13,8 +16,8 @@ const chatType = [ChatType.People, ChatType.Group]
 const ChatPane = () => {
     const [messages, setMessages] = useState<MessageRes[]>([])
     const {target, type, newMessages} = useChatSelector();
-    const {removeNewMessage} = useChatAction();
-
+    const dispatch = useAppDispatch();
+    const {addNewMessage} = useChatAction()
     useEffect(() => {
         console.log("chat pane");
         chatService.findPeopleChats(target)
@@ -22,6 +25,15 @@ const ChatPane = () => {
             setMessages(data)
             console.log(data)
         }).catch((error) => console.log(error))
+
+        socketService.receiveMessageHandler = (message) => {
+            console.log(message)
+            if (message.name === target){
+                setMessages(prevState => [message, ...prevState])
+            } else {
+                dispatch(addNewMessage(message))
+            }
+        }
     }, [target, type])
 
     useEffect(() => {
