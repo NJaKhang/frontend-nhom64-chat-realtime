@@ -7,7 +7,6 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import {TabContext, TabPanel} from "@mui/lab";
 import {
-    Avatar,
     Box,
     Button,
     Dialog,
@@ -15,14 +14,8 @@ import {
     DialogContent,
     DialogContentText,
     DialogTitle,
-    FormControl,
     IconButton,
-    InputLabel,
     List,
-    ListItem,
-    ListItemAvatar,
-    ListItemButton,
-    ListItemText, MenuItem, OutlinedInput, Select, SelectChangeEvent,
     TextField,
     Typography
 } from "@mui/material";
@@ -37,21 +30,29 @@ const RoomList = () => {
     const [value, setValue] = React.useState(ChatType.People);
     const [rooms, setRooms] = useState<RoomChat[]>([])
     const {newMessages} = useChatSelector();
-    const [openPeople, setOpenPeople] = React.useState(false);
-    const [type, setType] = useState<string>('people');
+    const [openModal, setOpenModal] = React.useState(false);
+    const [type, setType] = useState<ChatType>(ChatType.People);
 
     const handleChange = (event: React.SyntheticEvent, newValue: ChatType) => {
         setValue(newValue);
     };
 
+    const handleButtonClick = (type: ChatType) => {
+        setType(prevState => type);
+        console.log(type);
+        handleClickOpen();
+    }
+
     const handleClickOpen = () => {
-        setOpenPeople(true);
+        setOpenModal(true)
     };
 
-    const handleClose = (event: React.SyntheticEvent<unknown>, reason?: string) => {
-        if (reason !== 'backdropClick') {
-            setOpenPeople(false);
-        }
+    const handleSubmit = () => {
+        handleClose();
+    }
+
+    const handleClose = () => {
+        setOpenModal(false)
     };
 
     useEffect(() => {
@@ -76,7 +77,8 @@ const RoomList = () => {
             </Box>
 
             <Box sx={{
-                display: "flex"
+                display: "flex",
+                justifyContent: "space-between"
             }}>
                 <Box sx={{paddingY: 2}}>
                     <TextField size="medium"/>
@@ -84,14 +86,16 @@ const RoomList = () => {
 
                 <Box sx={{
                     paddingY: 2,
-                    marginLeft: "8px"
                 }}>
                     <Box>
-                        <IconButton color="primary" onClick={handleClickOpen} sx={{padding: "14px"}}>
+                        <IconButton color="primary" onClick={() => handleButtonClick(ChatType.People)} sx={{padding: "14px"}}>
                             <PersonAddIcon color="primary"/>
                         </IconButton>
+                        <IconButton color="primary" onClick={() => handleButtonClick(ChatType.Group)} sx={{padding: "14px"}}>
+                            <GroupAddIcon color="primary"/>
+                        </IconButton>
                         <Dialog
-                            open={openPeople}
+                            open={openModal}
                             onClose={handleClose}
                             aria-labelledby="alert-dialog-title"
                             aria-describedby="alert-dialog-description"
@@ -100,17 +104,17 @@ const RoomList = () => {
                                 fontWeight: "bold",
                                 fontSize: "20px"
                             }}>
-                                {"Thêm người dùng mới"}
+                                {type === ChatType.People ? "Add new people" : "Add new group"}
                             </DialogTitle>
                             <DialogContent>
                                 <DialogContentText id="alert-dialog-description" sx={{paddingTop: "10px"}}>
-                                    <TextField id="outlined-basic" label="Thêm người dùng" variant="outlined" sx={{width: 300}}/>
+                                    <TextField id="outlined-basic" label={type === ChatType.People ? "Add new people" : "Add new group"} variant="outlined" sx={{width: 300}}/>
                                 </DialogContentText>
                             </DialogContent>
-                            <DialogActions>
-                                <Button onClick={handleClose}>Disagree</Button>
-                                <Button onClick={handleClose} autoFocus>
-                                    Agree
+                            <DialogActions sx={{paddingRight: "24px"}}>
+                                <Button onClick={handleClose} color="error" variant="contained">Cancel</Button>
+                                <Button onClick={handleSubmit} autoFocus color="success" variant="contained">
+                                    Confirm
                                 </Button>
                             </DialogActions>
                         </Dialog>
