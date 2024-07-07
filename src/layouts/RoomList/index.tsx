@@ -25,6 +25,16 @@ import chatService from "@services/ChatService.ts";
 import React, {useEffect, useState} from 'react';
 import RoomItem from "../../components/RoomItem";
 
+interface NewRoom {
+    name: string
+    type: ChatType
+}
+
+const initialNewRoom: NewRoom = {
+    name: '',
+    type: ChatType.People
+};
+
 const RoomList = () => {
 
     const [value, setValue] = React.useState(ChatType.People);
@@ -32,31 +42,57 @@ const RoomList = () => {
     const {newMessages} = useChatSelector();
     const [openModal, setOpenModal] = React.useState(false);
     const [type, setType] = useState<ChatType>(ChatType.People);
+    const [newRoom, setNewRoom] = useState<NewRoom>(initialNewRoom);
 
     const handleChange = (event: React.SyntheticEvent, newValue: ChatType) => {
         setValue(newValue);
     };
 
     const handleButtonClick = (type: ChatType) => {
-        setType(prevState => type);
-        console.log(type);
+        setType(type);
+        setNewRoom(prevState => ({
+            ...prevState,
+            [type]: type
+        }));
+        console.log(newRoom.type);
         handleClickOpen();
     }
 
     const handleClickOpen = () => {
-        setOpenModal(true)
+        setOpenModal(true);
     };
 
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const name = e.target.value;
+        console.log(name)
+        setNewRoom(prevState => ({...prevState, name}));
+    }
+
     const handleSubmit = () => {
+        // Thêm vào RoomChat
+        const room: RoomChat = {
+            name: newRoom.name,
+            type: (newRoom.type === ChatType.People) ? 0 : 1,
+            actionTime: new Date()
+        };
+        console.log(room);
+        // Set room mới lên đầu danh sách
+        setRooms(prevRooms => [room, ...prevRooms]);
+        console.log(rooms);
         handleClose();
     }
 
     const handleClose = () => {
-        setOpenModal(false)
+        setOpenModal(false);
     };
 
+    const handleRooms = (rooms: RoomChat[]) => {
+        const peopleRooms: RoomChat[] = rooms.filter(room => room.type === 0);
+        setRooms(peopleRooms);
+    }
+
     useEffect(() => {
-        chatService.findRoomChat().then((rooms) => setRooms(rooms))
+        chatService.findRoomChat().then((rooms) => handleRooms(rooms))
     }, []);
 
     console.log(rooms)
@@ -88,10 +124,12 @@ const RoomList = () => {
                     paddingY: 2,
                 }}>
                     <Box>
-                        <IconButton color="primary" onClick={() => handleButtonClick(ChatType.People)} sx={{padding: "14px"}}>
+                        <IconButton color="primary" onClick={() => handleButtonClick(ChatType.People)}
+                                    sx={{padding: "14px"}}>
                             <PersonAddIcon color="primary"/>
                         </IconButton>
-                        <IconButton color="primary" onClick={() => handleButtonClick(ChatType.Group)} sx={{padding: "14px"}}>
+                        <IconButton color="primary" onClick={() => handleButtonClick(ChatType.Group)}
+                                    sx={{padding: "14px"}}>
                             <GroupAddIcon color="primary"/>
                         </IconButton>
                         <Dialog
@@ -108,7 +146,14 @@ const RoomList = () => {
                             </DialogTitle>
                             <DialogContent>
                                 <DialogContentText id="alert-dialog-description" sx={{paddingTop: "10px"}}>
-                                    <TextField id="outlined-basic" label={type === ChatType.People ? "Add new people" : "Add new group"} variant="outlined" sx={{width: 300}}/>
+                                    <TextField
+                                        id="outlined-basic"
+                                        label={type === ChatType.People ? "Add new people" : "Add new group"}
+                                        variant="outlined"
+                                        sx={{width: 300}}
+                                        name={"name"}
+                                        onChange={handleInputChange}
+                                    />
                                 </DialogContentText>
                             </DialogContent>
                             <DialogActions sx={{paddingRight: "24px"}}>
