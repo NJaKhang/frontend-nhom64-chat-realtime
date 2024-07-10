@@ -1,19 +1,32 @@
 import {ChatType} from "@constants/ChatType.ts";
 import {useChatAction} from "@features/chat/chatSlice.ts";
-import RoomChat from "@models/RoomChat.ts";
 import {Avatar, ListItem, ListItemAvatar, ListItemButton, ListItemText, Typography} from "@mui/material";
 import {useAppDispatch} from "@redux/store.ts";
-import React, {useCallback} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
+import {useRoomAction, useRoomSelector} from "@features/chat/roomSlice.ts";
+import {RoomDisplay} from "../../layouts/RoomList";
+
 
 interface RoomItemProps {
     chatType: ChatType
-    data: RoomChat
+    data: RoomDisplay
 }
 
 const RoomItem = ({data, chatType}: RoomItemProps) => {
+    // useState cho set trạng thái của highlight
+    const [highlightItem, setHighlightItem] = useState<boolean>(data.highlight);
     const {setTarget} = useChatAction();
+    const {setHighlight} = useRoomAction();
     const dispatch = useAppDispatch();
+    const {roomList} = useRoomSelector()
 
+    useEffect(() => {
+        const room = roomList.find(room => room.chat.name === data.chat.name);
+        if (room) {
+            setHighlightItem(room.highlight);
+        }
+    }, [roomList, data.chat.name]);
+    
     const stringToColor = useCallback((string: string) => {
 
         let hash = 0;
@@ -45,10 +58,10 @@ const RoomItem = ({data, chatType}: RoomItemProps) => {
         };
     }, [stringToColor])
 
-
-
     function handleClick() {
-        dispatch(setTarget({target: data.name, type: chatType}))
+        dispatch(setTarget({target: data.chat.name, type: chatType}))
+        dispatch(setHighlight({ name: data.chat.name, highlight: false }));
+        setHighlightItem(false);
     }
 
     return (
@@ -56,7 +69,7 @@ const RoomItem = ({data, chatType}: RoomItemProps) => {
         >
             <ListItemButton onClick={() => handleClick()}>
                 <ListItemAvatar>
-                    <Avatar {...stringAvatar(data.name)}/>
+                    <Avatar {...stringAvatar(data.chat.name)}/>
 
                 </ListItemAvatar>
 
@@ -66,7 +79,7 @@ const RoomItem = ({data, chatType}: RoomItemProps) => {
                         </p>
                     </div>
                 <ListItemText
-                    primary={data.name}
+                    primary={data.chat.name}
                     secondary={
                         <React.Fragment>
                             <Typography
@@ -75,10 +88,15 @@ const RoomItem = ({data, chatType}: RoomItemProps) => {
                                 variant="body2"
                                 color="text.primary"
                             >
-                                {data.actionTime.toDateString()}
+                                {data.chat.actionTime.toDateString()}
                             </Typography>
                         </React.Fragment>
                     }
+                    primaryTypographyProps={{
+                        sx: {
+                            fontWeight: highlightItem ? 'bold' : 'normal',
+                        }
+                    }}
                 />
             </ListItemButton>
         </ListItem>

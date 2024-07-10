@@ -24,6 +24,9 @@ import Tabs from '@mui/material/Tabs';
 import chatService from "@services/ChatService.ts";
 import React, {useEffect, useState} from 'react';
 import RoomItem from "../../components/RoomItem";
+import {useRoomAction} from "@features/chat/roomSlice.ts";
+import {useAppDispatch} from "@redux/store.ts";
+import Message from "@models/Message.ts";
 
 interface NewRoom {
     name: string
@@ -31,18 +34,44 @@ interface NewRoom {
 }
 
 const initialNewRoom: NewRoom = {
-    name: '',
+    name: "",
     type: ChatType.People
 };
+
+export interface RoomDisplay {
+    chat: RoomChat,
+    highlight: boolean
+}
 
 const RoomList = () => {
 
     const [value, setValue] = React.useState(ChatType.People);
-    const [rooms, setRooms] = useState<RoomChat[]>([])
-    const {newMessages} = useChatSelector();
+    const [displayRooms, setDisplayRooms] = useState<RoomDisplay[]>([])
+    const {target, newMessages} = useChatSelector();
     const [openModal, setOpenModal] = React.useState(false);
     const [type, setType] = useState<ChatType>(ChatType.People);
     const [newRoom, setNewRoom] = useState<NewRoom>(initialNewRoom);
+    const dispatch = useAppDispatch();
+    const {addNewRoom, addRooms} = useRoomAction();
+
+    useEffect(() => {
+        chatService.findRoomChat().then((rooms) => {
+            const displayRooms = rooms.map(room => ({
+                chat: room,
+                highlight: false, // Khởi tạo highlight là false cho mỗi phòng chat
+            }));
+            setDisplayRooms(displayRooms);
+            console.log(displayRooms);
+            dispatch(addRooms(displayRooms))
+        });
+    }, []);
+
+    // Effect đẩy dữ liệu người mới vừa nhắn lên trên đầu
+    useEffect(() => {
+        console.log(target);
+        setDisplayRooms(prevRooms => handleNewMessage([...prevRooms]));
+        dispatch(addRooms(handleNewMessage([...displayRooms])));
+    }, [newMessages]);
 
     const handleChange = (event: React.SyntheticEvent, newValue: ChatType) => {
         setValue(newValue);
@@ -69,16 +98,21 @@ const RoomList = () => {
     }
 
     const handleSubmit = () => {
-        // Thêm vào RoomChat
-        const room: RoomChat = {
-            name: newRoom.name,
-            type: (newRoom.type === ChatType.People) ? 0 : 1,
-            actionTime: new Date()
+        // Thêm vào RoomDisplay
+        const room: RoomDisplay = {
+            chat: {
+                name: newRoom.name,
+                type: (newRoom.type === ChatType.People) ? 0 : 1,
+                actionTime: new Date()
+            },
+            highlight: true
         };
         console.log(room);
         // Set room mới lên đầu danh sách
-        setRooms(prevRooms => [room, ...prevRooms]);
-        console.log(rooms);
+        setDisplayRooms(prevRooms => [room, ...prevRooms]);
+        // Gửi new room vào store
+        dispatch(addNewRoom(room));
+        console.log(displayRooms);
         handleClose();
     }
 
@@ -86,16 +120,20 @@ const RoomList = () => {
         setOpenModal(false);
     };
 
-    const handleRooms = (rooms: RoomChat[]) => {
-        const peopleRooms: RoomChat[] = rooms.filter(room => room.type === 0);
-        setRooms(peopleRooms);
+    const handleNewMessage = (roomList: RoomDisplay[]) => {
+        const updatedRooms: RoomDisplay[] = roomList;
+        newMessages.forEach((message: Message) => {
+            const index = updatedRooms.findIndex(room => room.chat.name === message.name);
+            if (index > -1) {
+                const [topRoomUpdated] = updatedRooms.splice(index, 1);
+                updatedRooms.unshift({
+                    ...topRoomUpdated,
+                    highlight: true
+                });
+            }
+        });
+        return updatedRooms;
     }
-
-    useEffect(() => {
-        chatService.findRoomChat().then((rooms) => handleRooms(rooms))
-    }, []);
-
-    console.log(rooms)
 
     return (
         <Box sx={{
@@ -176,10 +214,16 @@ const RoomList = () => {
                     </Tabs>
                     <TabPanel value={ChatType.People} sx={{padding: 0}}>
                         <List sx={{width: '100%', maxWidth: 360, bgcolor: 'background.paper'}}>
-                            {rooms.map((room) => <RoomItem data={room} chatType={value} key={room.name}/>)}
+                            {displayRooms.filter(displayRoom => displayRoom.chat.type === 0).map((displayRoom) => <RoomItem data={displayRoom} chatType={value}
+                                                                                           key={displayRoom.chat.name}/>)}
                         </List>
                     </TabPanel>
-                    <TabPanel value={ChatType.Group}>Item Two</TabPanel>
+                    <TabPanel value={ChatType.Group} sx={{padding: 0}}>
+                        <List sx={{width: '100%', maxWidth: 360, bgcolor: 'background.paper'}}>
+                            {displayRooms.filter(displayRoom => displayRoom.chat.type === 1).map((displayRoom) => <RoomItem data={displayRoom} chatType={value}
+                                                                                           key={displayRoom.chat.name}/>)}
+                        </List>
+                    </TabPanel>
                 </TabContext>
             </Box>
         </Box>

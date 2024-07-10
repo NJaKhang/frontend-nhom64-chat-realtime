@@ -16,8 +16,9 @@ const ChatPane = () => {
     const [messages, setMessages] = useState<MessageRes[]>([])
     const {target, type, newMessages} = useChatSelector();
     const dispatch = useAppDispatch();
-    const {addNewMessage} = useChatAction()
+    const {addNewMessage, setTarget} = useChatAction()
     const [loading, setLoading] = useState(false)
+
     useEffect(() => {
         setLoading(true)
         chatService.findPeopleChats(target)
@@ -32,9 +33,8 @@ const ChatPane = () => {
             console.log(message)
             if (message.name === target) {
                 setMessages(prevState => [message, ...prevState])
-            } else {
-                dispatch(addNewMessage(message))
             }
+            dispatch(addNewMessage(message));
         }
     }, [target, type])
 

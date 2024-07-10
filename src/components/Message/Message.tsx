@@ -1,8 +1,7 @@
 import {useAuthSelector} from "@features/auth/authSlice.ts";
 import {useChatSelector} from "@features/chat/chatSlice.ts";
 import MessageRes from "@models/Message.ts";
-import {Avatar, Box, Theme, Typography} from "@mui/material";
-import {useAppSelector} from "@redux/store.ts";
+import {Avatar, Box, Typography} from "@mui/material";
 import React, {useEffect} from 'react';
 
 
