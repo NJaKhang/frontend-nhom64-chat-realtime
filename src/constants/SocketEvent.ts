@@ -8,5 +8,6 @@ export enum SocketEvent {
     SendChat= "SEND_CHAT",
     GetPeopleMessage= "GET_PEOPLE_CHAT_MES",
     GetUserList= "GET_USER_LIST",
+    CheckUser = "CHECK_USER",
 
 }
