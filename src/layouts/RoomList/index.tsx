@@ -28,20 +28,19 @@ import {useRoomAction} from "@features/chat/roomSlice.ts";
 import {useAppDispatch} from "@redux/store.ts";
 import Message from "@models/Message.ts";
 
-interface NewRoom {
-    name: string
-    type: ChatType
-}
-
-const initialNewRoom: NewRoom = {
-    name: "",
-    type: ChatType.People
-};
-
 export interface RoomDisplay {
     chat: RoomChat,
     highlight: boolean
 }
+
+const initialNewRoom: RoomDisplay = {
+    chat: {
+        name: "",
+        type: 0,
+        actionTime: new Date()
+    },
+    highlight: false
+};
 
 const RoomList = () => {
 
@@ -50,7 +49,7 @@ const RoomList = () => {
     const {target, newMessages} = useChatSelector();
     const [openModal, setOpenModal] = React.useState(false);
     const [type, setType] = useState<ChatType>(ChatType.People);
-    const [newRoom, setNewRoom] = useState<NewRoom>(initialNewRoom);
+    const [newRoom, setNewRoom] = useState<RoomDisplay>(initialNewRoom);
     const dispatch = useAppDispatch();
     const {addNewRoom, addRooms} = useRoomAction();
 
@@ -77,13 +76,17 @@ const RoomList = () => {
         setValue(newValue);
     };
 
-    const handleButtonClick = (type: ChatType) => {
-        setType(type);
+    const handleButtonClick = (cType: number) => {
+        const chatType = (cType === 0) ? ChatType.People : ChatType.Group;
+        setType(chatType);
         setNewRoom(prevState => ({
             ...prevState,
-            [type]: type
+            chat: {
+                ...prevState.chat,
+                type: cType
+            }
         }));
-        console.log(newRoom.type);
+        console.log(newRoom);
         handleClickOpen();
     }
 
@@ -93,17 +96,22 @@ const RoomList = () => {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const name = e.target.value;
-        console.log(name)
-        setNewRoom(prevState => ({...prevState, name}));
+        setNewRoom(prevState => ({
+            ...prevState,
+            chat: {
+                ...prevState.chat,
+                name: name
+            }
+        }));
     }
 
     const handleSubmit = () => {
         // Thêm vào RoomDisplay
         const room: RoomDisplay = {
             chat: {
-                name: newRoom.name,
-                type: (newRoom.type === ChatType.People) ? 0 : 1,
-                actionTime: new Date()
+                name: newRoom.chat.name,
+                type: newRoom.chat.type,
+                actionTime: newRoom.chat.actionTime
             },
             highlight: true
         };
@@ -162,11 +170,11 @@ const RoomList = () => {
                     paddingY: 2,
                 }}>
                     <Box>
-                        <IconButton color="primary" onClick={() => handleButtonClick(ChatType.People)}
+                        <IconButton color="primary" onClick={() => handleButtonClick(0)}
                                     sx={{padding: "14px"}}>
                             <PersonAddIcon color="primary"/>
                         </IconButton>
-                        <IconButton color="primary" onClick={() => handleButtonClick(ChatType.Group)}
+                        <IconButton color="primary" onClick={() => handleButtonClick(1)}
                                     sx={{padding: "14px"}}>
                             <GroupAddIcon color="primary"/>
                         </IconButton>
