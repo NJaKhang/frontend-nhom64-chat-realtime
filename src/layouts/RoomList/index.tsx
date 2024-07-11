@@ -24,7 +24,7 @@ import Tabs from '@mui/material/Tabs';
 import chatService from "@services/ChatService.ts";
 import React, {useEffect, useState} from 'react';
 import RoomItem from "../../components/RoomItem";
-import {useRoomAction} from "@features/chat/roomSlice.ts";
+import {useRoomAction, useRoomSelector} from "@features/chat/roomSlice.ts";
 import {useAppDispatch} from "@redux/store.ts";
 import Message from "@models/Message.ts";
 
@@ -45,13 +45,15 @@ const initialNewRoom: RoomDisplay = {
 const RoomList = () => {
 
     const [value, setValue] = React.useState(ChatType.People);
-    const [displayRooms, setDisplayRooms] = useState<RoomDisplay[]>([])
-    const {target, newMessages} = useChatSelector();
+    const [searchInfo, setSearchInfo] = useState<string>("");
+    const [displayRooms, setDisplayRooms] = useState<RoomDisplay[]>([]);
     const [openModal, setOpenModal] = React.useState(false);
     const [type, setType] = useState<ChatType>(ChatType.People);
     const [newRoom, setNewRoom] = useState<RoomDisplay>(initialNewRoom);
+    const {target, newMessages} = useChatSelector()
     const dispatch = useAppDispatch();
     const {addNewRoom, addRooms} = useRoomAction();
+    const {roomList} = useRoomSelector();
 
     useEffect(() => {
         chatService.findRoomChat().then((rooms) => {
@@ -71,6 +73,11 @@ const RoomList = () => {
         setDisplayRooms(prevRooms => handleNewMessage([...prevRooms]));
         dispatch(addRooms(handleNewMessage([...displayRooms])));
     }, [newMessages]);
+
+    // Effect search khi người dùng thay đổi liên quan đến search (type hoặc content)
+    useEffect(() => {
+        filterSearch();
+    }, [searchInfo]);
 
     const handleChange = (event: React.SyntheticEvent, newValue: ChatType) => {
         setValue(newValue);
@@ -143,6 +150,24 @@ const RoomList = () => {
         return updatedRooms;
     }
 
+    const handleInputSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setSearchInfo(value);
+    }
+
+    const filterSearch = () => {
+        console.log(searchInfo);
+        if (searchInfo === "") {
+            setDisplayRooms(roomList);
+        } else {
+            setDisplayRooms(roomList.filter(room => room.chat.name.toLowerCase().includes(searchInfo)))
+        }
+    }
+
+    const handleWhenItemClick = () => {
+        setSearchInfo("");
+    }
+
     return (
         <Box sx={{
             gridArea: "room-list",
@@ -163,7 +188,7 @@ const RoomList = () => {
                 justifyContent: "space-between"
             }}>
                 <Box sx={{paddingY: 2}}>
-                    <TextField size="medium"/>
+                    <TextField value={searchInfo} label="Search" size="medium" onChange={handleInputSearch}/>
                 </Box>
 
                 <Box sx={{
@@ -223,13 +248,13 @@ const RoomList = () => {
                     <TabPanel value={ChatType.People} sx={{padding: 0}}>
                         <List sx={{width: '100%', maxWidth: 360, bgcolor: 'background.paper'}}>
                             {displayRooms.filter(displayRoom => displayRoom.chat.type === 0).map((displayRoom) => <RoomItem data={displayRoom} chatType={value}
-                                                                                           key={displayRoom.chat.name}/>)}
+                                                                                           key={displayRoom.chat.name} itemClick={handleWhenItemClick}/>)}
                         </List>
                     </TabPanel>
                     <TabPanel value={ChatType.Group} sx={{padding: 0}}>
                         <List sx={{width: '100%', maxWidth: 360, bgcolor: 'background.paper'}}>
                             {displayRooms.filter(displayRoom => displayRoom.chat.type === 1).map((displayRoom) => <RoomItem data={displayRoom} chatType={value}
-                                                                                           key={displayRoom.chat.name}/>)}
+                                                                                           key={displayRoom.chat.name} itemClick={handleWhenItemClick}/>)}
                         </List>
                     </TabPanel>
                 </TabContext>

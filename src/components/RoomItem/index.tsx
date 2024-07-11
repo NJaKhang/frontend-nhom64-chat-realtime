@@ -10,9 +10,10 @@ import {RoomDisplay} from "../../layouts/RoomList";
 interface RoomItemProps {
     chatType: ChatType
     data: RoomDisplay
+    itemClick: () => void
 }
 
-const RoomItem = ({data, chatType}: RoomItemProps) => {
+const RoomItem = ({data, chatType, itemClick}: RoomItemProps) => {
     // useState cho set trạng thái của highlight
     const [highlightItem, setHighlightItem] = useState<boolean>(data.highlight);
     const {setTarget} = useChatAction();
@@ -62,6 +63,7 @@ const RoomItem = ({data, chatType}: RoomItemProps) => {
         dispatch(setTarget({target: data.chat.name, type: chatType}))
         dispatch(setHighlight({ name: data.chat.name, highlight: false }));
         setHighlightItem(false);
+        itemClick();
     }
 
     return (
