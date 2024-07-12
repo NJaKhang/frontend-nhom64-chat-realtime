@@ -5,10 +5,13 @@ import {Box, Theme} from "@mui/material";
 import {useAppDispatch} from "@redux/store.ts";
 import chatService from "@services/ChatService.ts";
 import socketService from "@services/SocketService.ts";
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import ChatHeader from "../../components/ChatHeader";
 import ChatInput from "../../components/ChatInput";
 import MessageScroll from "../../components/MessageScroll";
+import ChatService from "@services/ChatService.ts";
+import InfiniteScroll from "react-infinite-scroll-component";
+import Message from "../../components/Message/Message.tsx";
 
 const chatType = [ChatType.People, ChatType.Group]
 
@@ -19,12 +22,21 @@ const ChatPane = () => {
     const {addNewMessage, removeNewMessage, setTarget} = useChatAction()
     const [loading, setLoading] = useState(false)
     const audioRef = useRef<HTMLAudioElement>(null)
-
+    const [page, setPage] = useState(1)
+    const [hasMore, setHasMore] = useState(false)
     useEffect(() => {
         setLoading(true)
+        setPage(1)
+        setHasMore(false)
         chatService.findPeopleChats(target)
             .then((data) => {
                 setMessages(data)
+                if (data.length == 50) {
+                    setHasMore(true)
+                } else {
+                    setHasMore(false)
+
+                }
             })
             .then(() => setLoading(false))
             .catch((error) => console.log(error))
@@ -72,6 +84,18 @@ const ChatPane = () => {
         }
     }, [newMessages, target, type]);
 
+    useEffect(() => {
+    }, [messages]);
+
+    const loadMore = useCallback(() => {
+        chatService.findPeopleChats(target, page + 1)
+            .then((data) => {
+                if (data.length < 50)
+                    setHasMore(false)
+                setMessages(prevState => [...prevState, ...data]);
+                setPage(page + 1)
+        })
+    }, [hasMore, page, target, type])
     return (
         <Box sx={{
             gridArea: "chat-pane",
@@ -91,7 +115,21 @@ const ChatPane = () => {
                     }}
                 >
                     <ChatHeader/>
-                    <MessageScroll messages={messages} loading={loading}/>
+                    <Box sx={{overflow: "auto", display: "flex", flexDirection: "column-reverse", gap: 1, paddingY: 2}} id="container">
+
+                        <InfiniteScroll
+                            dataLength={messages.length}
+                            next={loadMore}
+                            style={{ display: 'flex', flexDirection: 'column-reverse', gap: "8px" }}
+                            inverse={true} //
+                            hasMore={hasMore}
+                            loader={<h4>Loading...</h4>}
+                            scrollableTarget="container"
+                        >
+                            {!loading && messages.map(message => <Message key={message.id} message={message}/>)}
+
+                        </InfiniteScroll>
+                    </Box>
                     <ChatInput onSubmit={(message) => setMessages([message, ...messages])}/>
                 </Box>
             ) : (
