@@ -29,8 +29,8 @@ const Palette = (...mode: any) => {
   const greyPrimary = [
 
     "#ffffff",
-    "#edeff2",
-    "#e4e7f0",
+    "#f6f7fb",
+    "#dfe3eb",
     "#99a6bf",
     "#7d8fb3",
     "#6b7a99",
@@ -92,7 +92,7 @@ const Palette = (...mode: any) => {
         disabled: paletteColor.grey[400]
       },
       action: {
-        disabled: paletteColor.grey[300]
+        disabled: paletteColor.grey[200]
       },
       divider: paletteColor.grey[200],
       background: {

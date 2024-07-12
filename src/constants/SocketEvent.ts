@@ -6,6 +6,8 @@ export enum SocketEvent {
     CreateRoom = "CREATE_ROOM",
     JoinRoom = "JOIN_ROOM",
     SendChat= "SEND_CHAT",
-    GetPeopleMessage= "GET_PEOPLE_CHAT_MES"
+    GetPeopleMessage= "GET_PEOPLE_CHAT_MES",
+    GetUserList= "GET_USER_LIST",
+    CheckUser = "CHECK_USER",
 
 }

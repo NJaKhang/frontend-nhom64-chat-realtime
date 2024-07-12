@@ -1,5 +1,6 @@
 import {SocketAction} from "@constants/SocketAction.ts";
 import {SocketEvent} from "@constants/SocketEvent.ts";
+import Message from "@models/Message.ts";
 import SocketError from "@models/SocketError.ts";
 import {SocketResponse} from "@models/SocketResponse.ts";
 
@@ -15,6 +16,7 @@ class SocketService {
     socket: WebSocket
     successHandlers: Map<SocketEvent, SuccessHandler<never>>
     errorHandlers: Map<SocketEvent, ErrorHandler>
+    receiveMessageHandler: (message: Message) => void
     onOpen: () => void;
 
     constructor() {
@@ -31,12 +33,14 @@ class SocketService {
     }
 
     handleError(error: SocketError) {
+        console.log(error)
         const handler = this.errorHandlers.get(error.event)
+        this.successHandlers.set(error.event, undefined)
         handler && handler(error);
     }
 
     handleSuccess(data: SocketResponse<never>) {
-
+        console.log(data)
         const handler = this.successHandlers.get(data.event)
         handler && handler(data);
     }
@@ -46,7 +50,12 @@ class SocketService {
         if (data.status == "error") {
             this.handleError(data as SocketError)
         } else {
-            this.handleSuccess(data as SocketResponse<never>);
+            if(data.event == SocketEvent.SendChat){
+                this.receiveMessageHandler && this.receiveMessageHandler(data.data)
+            } else {
+                this.handleSuccess(data as SocketResponse<never>);
+
+            }
         }
 
     }
