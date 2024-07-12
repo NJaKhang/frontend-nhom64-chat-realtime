@@ -9,10 +9,10 @@ import {Box, IconButton, InputBase} from "@mui/material";
 import chatService from "@services/ChatService.ts";
 import Picker from "emoji-picker-react"
 import {EmojiClickData} from "emoji-picker-react/src/types/exposedTypes.ts";
-import {FormEvent, useState} from 'react';
+import {FormEvent, useEffect, useState} from 'react';
 import style from "./style.ts";
 
-interface ChatInputProps{
+interface ChatInputProps {
     onSubmit: (message: Message) => void
 }
 
@@ -22,8 +22,14 @@ const ChatInput = ({onSubmit}: ChatInputProps) => {
     const {target, type} = useChatSelector();
     const {user} = useAuthSelector();
 
+    useEffect(() => {
+        setMessage("")
+    }, [target]);
+
     const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (!message)
+            return;
         chatService.sendMessage(message, target);
         setMessage("")
         const messageObject: Message = {
