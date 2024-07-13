@@ -48,10 +48,12 @@ const initialNewRoom: RoomDisplay = {
 const RoomList = () => {
 
     const [value, setValue] = React.useState(ChatType.People);
+    const [searchInfo, setSearchInfo] = useState<string>("");
     const {target, newMessages} = useChatSelector();
     const [openModal, setOpenModal] = React.useState(false);
     const [type, setType] = useState<ChatType>(ChatType.People);
     const [newRoom, setNewRoom] = useState<RoomDisplay>(initialNewRoom);
+    const {target, newMessages} = useChatSelector()
     const dispatch = useAppDispatch();
     const {addNewRoom, addRooms} = useRoomAction();
     const {roomList} = useRoomSelector()
@@ -72,6 +74,11 @@ const RoomList = () => {
     useEffect(() => {
         dispatch(addRooms(handleNewMessage([...roomList])));
     }, [newMessages]);
+
+    // Effect search khi người dùng thay đổi liên quan đến search (type hoặc content)
+    useEffect(() => {
+        filterSearch();
+    }, [searchInfo]);
 
     const handleChange = (event: React.SyntheticEvent, newValue: ChatType) => {
         setValue(newValue);
@@ -144,6 +151,24 @@ const RoomList = () => {
         return roomList;
     }
 
+    const handleInputSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setSearchInfo(value);
+    }
+
+    const filterSearch = () => {
+        console.log(searchInfo);
+        if (searchInfo === "") {
+            setDisplayRooms(roomList);
+        } else {
+            setDisplayRooms(roomList.filter(room => room.chat.name.toLowerCase().includes(searchInfo)))
+        }
+    }
+
+    const handleWhenItemClick = () => {
+        setSearchInfo("");
+    }
+
     return (
         <Box sx={{
             gridArea: "room-list",
@@ -164,7 +189,7 @@ const RoomList = () => {
                 justifyContent: "space-between"
             }}>
                 <Box sx={{paddingY: 2}}>
-                    <TextField size="medium"/>
+                    <TextField value={searchInfo} label="Search" size="medium" onChange={handleInputSearch}/>
                 </Box>
 
                 <Box sx={{
@@ -226,7 +251,8 @@ const RoomList = () => {
                             {roomList.filter(displayRoom => displayRoom.chat.type === 0 && displayRoom.chat.name != user.name).map((displayRoom) =>
                                 <RoomItem active={target == displayRoom.chat.name} data={displayRoom}
                                           chatType={value}
-                                          key={displayRoom.chat.name}/>)}
+                                          key={displayRoom.chat.name}
+                                          itemClick={handleWhenItemClick}/>)}
                         </List>
                     </TabPanel>
                     <TabPanel value={ChatType.Group} sx={{padding: 0}}>
@@ -234,7 +260,8 @@ const RoomList = () => {
                             {roomList.filter(displayRoom => displayRoom.chat.type === 1 && displayRoom.chat.name != user.name).map((displayRoom) =>
                                 <RoomItem active={target == displayRoom.chat.name} data={displayRoom}
                                           chatType={value}
-                                          key={displayRoom.chat.name}/>)}
+                                          key={displayRoom.chat.name}
+                                          itemClick={handleWhenItemClick}/>)}
                         </List>
                     </TabPanel>
                 </TabContext>
