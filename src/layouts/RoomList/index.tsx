@@ -50,6 +50,8 @@ const initialNewRoom: RoomDisplay = {
 const RoomList = () => {
 
     const [value, setValue] = React.useState(ChatType.People);
+    const [searchInfo, setSearchInfo] = useState<string>("");
+    const [displayRooms, setDisplayRooms] = useState<RoomDisplay[]>([]);
     const {target, newMessages} = useChatSelector();
     const [openModal, setOpenModal] = React.useState(false);
     const [type, setType] = useState<ChatType>(ChatType.People);
@@ -76,6 +78,11 @@ const RoomList = () => {
     useEffect(() => {
         dispatch(addRooms(handleNewMessage([...roomList])));
     }, [newMessages]);
+
+    // Effect search khi người dùng thay đổi thanh search
+    useEffect(() => {
+        filterSearch();
+    }, [searchInfo]);
 
     const handleChange = (event: React.SyntheticEvent, newValue: ChatType) => {
         setValue(newValue);
@@ -148,19 +155,22 @@ const RoomList = () => {
         return roomList;
     }
 
-    function handleDropdownClose() {
-        setAnchorEl(null);
-
+    const handleInputSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setSearchInfo(value);
     }
 
-    function handleAddPerson() {
-        handleButtonClick(0)
-        setAnchorEl(null);
-
+    const filterSearch = () => {
+        console.log(searchInfo);
+        if (searchInfo === "") {
+            setDisplayRooms(roomList);
+        } else {
+            setDisplayRooms(roomList.filter(room => room.chat.name.toLowerCase().includes(searchInfo)))
+        }
     }
-    function handleCrateGroup() {
-        handleButtonClick(1)
-        setAnchorEl(null);
+
+    const handleWhenItemClick = () => {
+        setSearchInfo("");
 
     }
 
@@ -185,7 +195,8 @@ const RoomList = () => {
                 gap: 0.5
             }}>
                 <Box sx={{paddingY: 2}}>
-                    <TextField size="small"/>
+                    <TextField value={searchInfo} label="Search" size="medium" onChange={handleInputSearch}/>
+
                 </Box>
 
                 <Box display="flex" alignItems="center">
@@ -297,18 +308,20 @@ const RoomList = () => {
                     </Tabs>
                     <TabPanel value={ChatType.People} sx={{padding: 0}}>
                         <List sx={{width: '100%', maxWidth: 360, bgcolor: 'background.paper'}}>
-                            {roomList.filter(displayRoom => displayRoom.chat.type === 0 && displayRoom.chat.name != user.name).map((displayRoom) =>
+                            {displayRooms.filter(displayRoom => displayRoom.chat.type === 0 && displayRoom.chat.name != user.name).map((displayRoom) =>
                                 <RoomItem active={target == displayRoom.chat.name} data={displayRoom}
                                           chatType={value}
-                                          key={displayRoom.chat.name}/>)}
+                                          key={displayRoom.chat.name}
+                                          itemClick={handleWhenItemClick}/>)}
                         </List>
                     </TabPanel>
                     <TabPanel value={ChatType.Group} sx={{padding: 0}}>
                         <List sx={{width: '100%', maxWidth: 360, bgcolor: 'background.paper'}}>
-                            {roomList.filter(displayRoom => displayRoom.chat.type === 1 && displayRoom.chat.name != user.name).map((displayRoom) =>
+                            {displayRooms.filter(displayRoom => displayRoom.chat.type === 1 && displayRoom.chat.name != user.name).map((displayRoom) =>
                                 <RoomItem active={target == displayRoom.chat.name} data={displayRoom}
                                           chatType={value}
-                                          key={displayRoom.chat.name}/>)}
+                                          key={displayRoom.chat.name}
+                                          itemClick={handleWhenItemClick}/>)}
                         </List>
                     </TabPanel>
                 </TabContext>
