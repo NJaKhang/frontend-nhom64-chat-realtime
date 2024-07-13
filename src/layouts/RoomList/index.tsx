@@ -50,10 +50,11 @@ const initialNewRoom: RoomDisplay = {
 const RoomList = () => {
 
     const [value, setValue] = React.useState(ChatType.People);
-    const {target, newMessages} = useChatSelector();
+    const [searchInfo, setSearchInfo] = useState<string>("");
     const [openModal, setOpenModal] = React.useState(false);
     const [type, setType] = useState<ChatType>(ChatType.People);
     const [newRoom, setNewRoom] = useState<RoomDisplay>(initialNewRoom);
+    const {target, newMessages} = useChatSelector()
     const dispatch = useAppDispatch();
     const {addNewRoom, addRooms} = useRoomAction();
     const {roomList} = useRoomSelector()
@@ -164,6 +165,15 @@ const RoomList = () => {
 
     }
 
+    const handleInputSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setSearchInfo(value);
+    }
+
+    const handleWhenItemClick = () => {
+        setSearchInfo("");
+    }
+
     return (
         <Box sx={{
             gridArea: "room-list",
@@ -185,6 +195,7 @@ const RoomList = () => {
                 gap: 0.5
             }}>
                 <Box sx={{paddingY: 2}}>
+                    <TextField value={searchInfo} label="Search" size="medium" onChange={handleInputSearch}/>
                     <TextField size="small"/>
                 </Box>
 
@@ -297,18 +308,20 @@ const RoomList = () => {
                     </Tabs>
                     <TabPanel value={ChatType.People} sx={{padding: 0}}>
                         <List sx={{width: '100%', maxWidth: 360, bgcolor: 'background.paper'}}>
-                            {roomList.filter(displayRoom => displayRoom.chat.type === 0 && displayRoom.chat.name != user.name).map((displayRoom) =>
+                            {roomList.filter(displayRoom => displayRoom.chat.type === 0 && displayRoom.chat.name != user.name && (displayRoom.chat.name.toLowerCase().includes(searchInfo.toLowerCase()))).map((displayRoom) =>
                                 <RoomItem active={target == displayRoom.chat.name} data={displayRoom}
                                           chatType={value}
-                                          key={displayRoom.chat.name}/>)}
+                                          key={displayRoom.chat.name}
+                                          itemClick={handleWhenItemClick}/>)}
                         </List>
                     </TabPanel>
                     <TabPanel value={ChatType.Group} sx={{padding: 0}}>
                         <List sx={{width: '100%', maxWidth: 360, bgcolor: 'background.paper'}}>
-                            {roomList.filter(displayRoom => displayRoom.chat.type === 1 && displayRoom.chat.name != user.name).map((displayRoom) =>
+                            {roomList.filter(displayRoom => displayRoom.chat.type === 1 && displayRoom.chat.name != user.name && (displayRoom.chat.name.toLowerCase().includes(searchInfo.toLowerCase()))).map((displayRoom) =>
                                 <RoomItem active={target == displayRoom.chat.name} data={displayRoom}
                                           chatType={value}
-                                          key={displayRoom.chat.name}/>)}
+                                          key={displayRoom.chat.name}
+                                          itemClick={handleWhenItemClick}/>)}
                         </List>
                     </TabPanel>
                 </TabContext>
