@@ -49,7 +49,6 @@ const RoomList = () => {
 
     const [value, setValue] = React.useState(ChatType.People);
     const [searchInfo, setSearchInfo] = useState<string>("");
-    const {target, newMessages} = useChatSelector();
     const [openModal, setOpenModal] = React.useState(false);
     const [type, setType] = useState<ChatType>(ChatType.People);
     const [newRoom, setNewRoom] = useState<RoomDisplay>(initialNewRoom);
@@ -74,11 +73,6 @@ const RoomList = () => {
     useEffect(() => {
         dispatch(addRooms(handleNewMessage([...roomList])));
     }, [newMessages]);
-
-    // Effect search khi người dùng thay đổi liên quan đến search (type hoặc content)
-    useEffect(() => {
-        filterSearch();
-    }, [searchInfo]);
 
     const handleChange = (event: React.SyntheticEvent, newValue: ChatType) => {
         setValue(newValue);
@@ -154,15 +148,6 @@ const RoomList = () => {
     const handleInputSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         setSearchInfo(value);
-    }
-
-    const filterSearch = () => {
-        console.log(searchInfo);
-        if (searchInfo === "") {
-            setDisplayRooms(roomList);
-        } else {
-            setDisplayRooms(roomList.filter(room => room.chat.name.toLowerCase().includes(searchInfo)))
-        }
     }
 
     const handleWhenItemClick = () => {
@@ -248,7 +233,7 @@ const RoomList = () => {
                     </Tabs>
                     <TabPanel value={ChatType.People} sx={{padding: 0}}>
                         <List sx={{width: '100%', maxWidth: 360, bgcolor: 'background.paper'}}>
-                            {roomList.filter(displayRoom => displayRoom.chat.type === 0 && displayRoom.chat.name != user.name).map((displayRoom) =>
+                            {roomList.filter(displayRoom => displayRoom.chat.type === 0 && displayRoom.chat.name != user.name && (displayRoom.chat.name.toLowerCase().includes(searchInfo.toLowerCase()))).map((displayRoom) =>
                                 <RoomItem active={target == displayRoom.chat.name} data={displayRoom}
                                           chatType={value}
                                           key={displayRoom.chat.name}
@@ -257,7 +242,7 @@ const RoomList = () => {
                     </TabPanel>
                     <TabPanel value={ChatType.Group} sx={{padding: 0}}>
                         <List sx={{width: '100%', maxWidth: 360, bgcolor: 'background.paper'}}>
-                            {roomList.filter(displayRoom => displayRoom.chat.type === 1 && displayRoom.chat.name != user.name).map((displayRoom) =>
+                            {roomList.filter(displayRoom => displayRoom.chat.type === 1 && displayRoom.chat.name != user.name && (displayRoom.chat.name.toLowerCase().includes(searchInfo.toLowerCase()))).map((displayRoom) =>
                                 <RoomItem active={target == displayRoom.chat.name} data={displayRoom}
                                           chatType={value}
                                           key={displayRoom.chat.name}

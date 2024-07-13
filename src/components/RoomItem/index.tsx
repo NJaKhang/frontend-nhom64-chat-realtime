@@ -1,8 +1,8 @@
 import {ChatType} from "@constants/ChatType.ts";
 import {useChatAction} from "@features/chat/chatSlice.ts";
-import {Avatar, Box, Chip, ListItem, ListItemAvatar, ListItemButton, ListItemText, Typography} from "@mui/material";
+import {Avatar, Chip, ListItem, ListItemAvatar, ListItemButton, ListItemText, Typography} from "@mui/material";
 import {useAppDispatch} from "@redux/store.ts";
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback} from 'react';
 import {useRoomAction, useRoomSelector} from "@features/chat/roomSlice.ts";
 import {RoomDisplay} from "../../layouts/RoomList";
 
@@ -61,7 +61,6 @@ const RoomItem = ({data, chatType, active, itemClick}: RoomItemProps) => {
         dispatch(setHighlight({highlight: false, name: data.chat.name}))
         dispatch(setTarget({target: data.chat.name, type: chatType}))
         dispatch(setHighlight({ name: data.chat.name, highlight: false }));
-        setHighlightItem(false);
         itemClick();
     }
 
