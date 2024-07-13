@@ -49,11 +49,11 @@ const RoomList = () => {
 
     const [value, setValue] = React.useState(ChatType.People);
     const [searchInfo, setSearchInfo] = useState<string>("");
+    const [displayRooms, setDisplayRooms] = useState<RoomDisplay[]>([]);
     const {target, newMessages} = useChatSelector();
     const [openModal, setOpenModal] = React.useState(false);
     const [type, setType] = useState<ChatType>(ChatType.People);
     const [newRoom, setNewRoom] = useState<RoomDisplay>(initialNewRoom);
-    const {target, newMessages} = useChatSelector()
     const dispatch = useAppDispatch();
     const {addNewRoom, addRooms} = useRoomAction();
     const {roomList} = useRoomSelector()
@@ -75,7 +75,7 @@ const RoomList = () => {
         dispatch(addRooms(handleNewMessage([...roomList])));
     }, [newMessages]);
 
-    // Effect search khi người dùng thay đổi liên quan đến search (type hoặc content)
+    // Effect search khi người dùng thay đổi thanh search
     useEffect(() => {
         filterSearch();
     }, [searchInfo]);
@@ -248,7 +248,7 @@ const RoomList = () => {
                     </Tabs>
                     <TabPanel value={ChatType.People} sx={{padding: 0}}>
                         <List sx={{width: '100%', maxWidth: 360, bgcolor: 'background.paper'}}>
-                            {roomList.filter(displayRoom => displayRoom.chat.type === 0 && displayRoom.chat.name != user.name).map((displayRoom) =>
+                            {displayRooms.filter(displayRoom => displayRoom.chat.type === 0 && displayRoom.chat.name != user.name).map((displayRoom) =>
                                 <RoomItem active={target == displayRoom.chat.name} data={displayRoom}
                                           chatType={value}
                                           key={displayRoom.chat.name}
@@ -257,7 +257,7 @@ const RoomList = () => {
                     </TabPanel>
                     <TabPanel value={ChatType.Group} sx={{padding: 0}}>
                         <List sx={{width: '100%', maxWidth: 360, bgcolor: 'background.paper'}}>
-                            {roomList.filter(displayRoom => displayRoom.chat.type === 1 && displayRoom.chat.name != user.name).map((displayRoom) =>
+                            {displayRooms.filter(displayRoom => displayRoom.chat.type === 1 && displayRoom.chat.name != user.name).map((displayRoom) =>
                                 <RoomItem active={target == displayRoom.chat.name} data={displayRoom}
                                           chatType={value}
                                           key={displayRoom.chat.name}

@@ -61,7 +61,6 @@ const RoomItem = ({data, chatType, active, itemClick}: RoomItemProps) => {
         dispatch(setHighlight({highlight: false, name: data.chat.name}))
         dispatch(setTarget({target: data.chat.name, type: chatType}))
         dispatch(setHighlight({ name: data.chat.name, highlight: false }));
-        setHighlightItem(false);
         itemClick();
     }
 
