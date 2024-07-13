@@ -5,6 +5,7 @@ import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
 import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import {TabContext, TabPanel} from "@mui/lab";
 import {
     Box,
@@ -15,8 +16,8 @@ import {
     DialogContentText,
     DialogTitle,
     IconButton,
-    List,
-    TextField,
+    List, ListItemIcon, Menu, MenuItem,
+    TextField, Tooltip,
     Typography
 } from "@mui/material";
 import Tab from '@mui/material/Tab';
@@ -28,6 +29,7 @@ import {useRoomAction, useRoomSelector} from "@features/chat/roomSlice.ts";
 import {useAppDispatch} from "@redux/store.ts";
 import Message from "@models/Message.ts";
 import {useAuthSelector} from "@features/auth/authSlice.ts";
+import {JoinInner, Logout, PersonAdd, Settings} from "@mui/icons-material";
 
 export interface RoomDisplay {
     chat: RoomChat,
@@ -58,6 +60,8 @@ const RoomList = () => {
     const {addNewRoom, addRooms} = useRoomAction();
     const {roomList} = useRoomSelector()
     const {user} = useAuthSelector()
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const open = Boolean(anchorEl);
 
     useEffect(() => {
         chatService.findRoomChat().then((rooms) => {
@@ -167,6 +171,7 @@ const RoomList = () => {
 
     const handleWhenItemClick = () => {
         setSearchInfo("");
+
     }
 
     return (
@@ -186,56 +191,111 @@ const RoomList = () => {
 
             <Box sx={{
                 display: "flex",
-                justifyContent: "space-between"
+                justifyContent: "space-between",
+                gap: 0.5
             }}>
                 <Box sx={{paddingY: 2}}>
                     <TextField value={searchInfo} label="Search" size="medium" onChange={handleInputSearch}/>
+
                 </Box>
 
-                <Box sx={{
-                    paddingY: 2,
-                }}>
-                    <Box>
-                        <IconButton color="primary" onClick={() => handleButtonClick(0)}
-                                    sx={{padding: "14px"}}>
-                            <PersonAddIcon color="primary"/>
-                        </IconButton>
-                        <IconButton color="primary" onClick={() => handleButtonClick(1)}
-                                    sx={{padding: "14px"}}>
-                            <GroupAddIcon color="primary"/>
-                        </IconButton>
-                        <Dialog
-                            open={openModal}
-                            onClose={handleClose}
-                            aria-labelledby="alert-dialog-title"
-                            aria-describedby="alert-dialog-description"
+                <Box display="flex" alignItems="center">
+                    <Tooltip title="Account settings">
+                        <IconButton
+                            onClick={(e) =>     setAnchorEl(e.currentTarget)}
+                            aria-controls={open ? 'account-menu' : undefined}
+                            aria-haspopup="true"
+                            aria-expanded={open ? 'true' : undefined}
                         >
-                            <DialogTitle id="alert-dialog-title" sx={{
-                                fontWeight: "bold",
-                                fontSize: "20px"
-                            }}>
-                                {type === ChatType.People ? "Add new people" : "Add new group"}
-                            </DialogTitle>
-                            <DialogContent>
-                                <DialogContentText id="alert-dialog-description" sx={{paddingTop: "10px"}}>
-                                    <TextField
-                                        id="outlined-basic"
-                                        label={type === ChatType.People ? "Add new people" : "Add new group"}
-                                        variant="outlined"
-                                        sx={{width: 300}}
-                                        name={"name"}
-                                        onChange={handleInputChange}
-                                    />
-                                </DialogContentText>
-                            </DialogContent>
-                            <DialogActions sx={{paddingRight: "24px"}}>
-                                <Button onClick={handleClose} color="error" variant="contained">Cancel</Button>
-                                <Button onClick={handleSubmit} autoFocus color="success" variant="contained">
-                                    Confirm
-                                </Button>
-                            </DialogActions>
-                        </Dialog>
-                    </Box>
+                            <MoreVertIcon/>
+                        </IconButton>
+                    </Tooltip>
+                    <Menu
+                        anchorEl={anchorEl}
+                        id="account-menu"
+                        open={open}
+                        onClose={handleDropdownClose}
+                        onClick={handleDropdownClose}
+                        PaperProps={{
+                            elevation: 0,
+                            sx: {
+                                overflow: 'visible',
+                                filter: 'drop-shadow(0px 2px 8px rgba(0,0,0,0.32))',
+                                mt: 1.5,
+                                '& .MuiAvatar-root': {
+                                    width: 32,
+                                    height: 32,
+                                    ml: -0.5,
+                                    mr: 1,
+                                },
+                                '&::before': {
+                                    content: '""',
+                                    display: 'block',
+                                    position: 'absolute',
+                                    top: 0,
+                                    right: 14,
+                                    width: 10,
+                                    height: 10,
+                                    bgcolor: 'background.paper',
+                                    transform: 'translateY(-50%) rotate(45deg)',
+                                    zIndex: 0,
+                                },
+                            },
+                        }}
+                        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                    >
+
+                        <MenuItem onClick={handleAddPerson}>
+                            <ListItemIcon>
+                                <PersonAdd fontSize="small" />
+                            </ListItemIcon>
+                            Add people
+                        </MenuItem>
+                        <MenuItem onClick={handleCrateGroup}>
+                            <ListItemIcon>
+                                <GroupAddIcon fontSize="small" />
+                            </ListItemIcon>
+                            Create group
+                        </MenuItem>
+                        <MenuItem onClick={handleAddPerson}>
+                            <ListItemIcon>
+                                <GroupAddIcon fontSize="small"/>
+                            </ListItemIcon>
+                            Join Group
+                        </MenuItem>
+                    </Menu>
+                    <Dialog
+                        open={openModal}
+                        onClose={handleClose}
+                        aria-labelledby="alert-dialog-title"
+                        aria-describedby="alert-dialog-description"
+                    >
+                        <DialogTitle id="alert-dialog-title" sx={{
+                            fontWeight: "bold",
+                            fontSize: "20px"
+                        }}>
+                            {type === ChatType.People ? "Add new people" : "Add new group"}
+                        </DialogTitle>
+                        <DialogContent>
+                            <DialogContentText id="alert-dialog-description" sx={{paddingTop: "10px"}}>
+                                <TextField
+                                    id="outlined-basic"
+                                    label={type === ChatType.People ? "Add new people" : "Add new group"}
+                                    variant="outlined"
+                                    sx={{width: 300}}
+                                    name={"name"}
+                                    onChange={handleInputChange}
+                                />
+                            </DialogContentText>
+                        </DialogContent>
+                        <DialogActions sx={{paddingRight: "24px"}}>
+                            <Button onClick={handleClose} variant="text">Cancel</Button>
+                            <Button onClick={handleSubmit} autoFocus color="primary" variant="contained">
+                                Confirm
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
                 </Box>
             </Box>
 
