@@ -11,15 +11,13 @@ interface RoomItemProps {
     chatType: ChatType
     data: RoomDisplay
     active: boolean
-    itemClick: () => void 
 }
 
-const RoomItem = ({data, chatType, active, itemClick}: RoomItemProps) => {
+const RoomItem = ({data, chatType, active}: RoomItemProps) => {
     // useState cho set trạng thái của highlight
     const {setTarget} = useChatAction();
     const {setHighlight} = useRoomAction();
     const dispatch = useAppDispatch();
-    const {roomList} = useRoomSelector()
 
 
 
@@ -61,7 +59,6 @@ const RoomItem = ({data, chatType, active, itemClick}: RoomItemProps) => {
         dispatch(setHighlight({highlight: false, name: data.chat.name}))
         dispatch(setTarget({target: data.chat.name, type: chatType}))
         dispatch(setHighlight({ name: data.chat.name, highlight: false }));
-        itemClick();
     }
 
     return (
