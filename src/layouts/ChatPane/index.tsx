@@ -12,6 +12,7 @@ import MessageScroll from "../../components/MessageScroll";
 import ChatService from "@services/ChatService.ts";
 import InfiniteScroll from "react-infinite-scroll-component";
 import Message from "../../components/Message/Message.tsx";
+import {useAuthSelector} from "@features/auth/authSlice.ts";
 
 const chatType = [ChatType.People, ChatType.Group]
 
@@ -24,6 +25,7 @@ const ChatPane = () => {
     const audioRef = useRef<HTMLAudioElement>(null)
     const [page, setPage] = useState(1)
     const [hasMore, setHasMore] = useState(false)
+    const {user} = useAuthSelector();
     useEffect(() => {
         setLoading(true)
         setPage(1)
@@ -62,12 +64,15 @@ const ChatPane = () => {
             const temp = [...newMessages];
             const item = temp.pop()
             if (item) {
-                if (!temp.some(value => value.name == item.name && value.type == item.type)) {
+                // Kiểm tra xem người gửi có phải là người đăng nhập không
+                if (item.name !== user.name) {
+                    if (!temp.some(value => value.name == item.to && value.type == item.type)) {
 
-                    audioRef.current.currentTime = 0;
-                    audioRef.current.play();
+                        audioRef.current.currentTime = 0;
+                        audioRef.current.play();
 
 
+                    }
                 }
             }
 

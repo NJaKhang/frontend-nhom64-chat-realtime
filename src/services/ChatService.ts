@@ -33,6 +33,14 @@ class ChatService {
         })
     }
 
+    sendRoomMessage(message: string, room: string) {
+        socketService.send(SocketEvent.SendChat, {
+            type: "people",
+            mes: message,
+            to: room
+        })
+    }
+
     async createGroup(name: string): Promise<RoomChat> {
         const data = { name: name }
         return new Promise<RoomChat>((resolve, reject) => {

@@ -33,6 +33,7 @@ const ChatInput = ({onSubmit}: ChatInputProps) => {
         e.preventDefault();
         if (!message)
             return;
+        console.log("Loại chat: ", type);
         chatService.sendMessage(message, target);
         setMessage("")
 
