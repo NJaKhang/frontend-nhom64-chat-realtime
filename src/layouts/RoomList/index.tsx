@@ -53,6 +53,7 @@ const RoomList = () => {
     const [value, setValue] = React.useState(ChatType.People);
     const [searchKeyWord, setSearchKeyWord] = useState<string>("");
     const [openModal, setOpenModal] = React.useState(false);
+    const [isCreateGroup, setIsCreateGroup] = useState<boolean>(false);       // State kiểm tra người dùng thêm mói group (Để bỏ qua việc useEffect handle cả lần render mặc định đầu tiên
     const [type, setType] = useState<ChatType>(ChatType.People);
     const [newRoom, setNewRoom] = useState<RoomDisplay>(initialNewRoom);
     const {target, newMessages} = useChatSelector()
@@ -68,7 +69,7 @@ const RoomList = () => {
             const displayRooms = rooms.map(room => ({
                 chat: room,
                 highlight: false,
-                message: 0// Khởi tạo highlight là false cho mỗi phòng chat
+                message: 0
             }));
             dispatch(addRooms(displayRooms))
         });
@@ -78,6 +79,14 @@ const RoomList = () => {
     useEffect(() => {
         dispatch(addRooms(handleNewMessage([...roomList])));
     }, [newMessages]);
+
+    // Effect đẩy dữ liệu
+
+    useEffect(() => {
+        if (isCreateGroup) {
+            console.log("Add Group")
+        }
+    }, [isCreateGroup]);
 
     const handleChange = (event: React.SyntheticEvent, newValue: ChatType) => {
         setValue(newValue);
@@ -128,9 +137,7 @@ const RoomList = () => {
             message: 0
         };
         console.log(room);
-        // Set room mới lên đầu danh sách
-        // Gửi new room vào store
-        dispatch(addNewRoom(room));
+        handleCreateGroup(room);
         handleClose();
     }
 
@@ -140,17 +147,41 @@ const RoomList = () => {
 
     const handleNewMessage = (roomList: RoomDisplay[]) => {
         newMessages.forEach((message: Message) => {
-            const index = roomList.findIndex(room => room.chat.name === message.name);
-            if (index > -1) {
-                const [topRoomUpdated] = roomList.splice(index, 1);
+            const receiveIndex = roomList.findIndex(room => room.chat.name === message.name);
+            if (receiveIndex > -1) {
+                const [topRoomUpdated] = roomList.splice(receiveIndex, 1);
                 roomList.unshift({
                     ...topRoomUpdated,
                     highlight: true,
                     message: newMessages.filter(m => m.name === topRoomUpdated.chat.name).length
                 });
             }
+
+            // Phải để sendIndex xuống sau khi xử lý xong receiveIndex
+            const sendIndex = roomList.findIndex(room => room.chat.name === message.to)
+            if (sendIndex > -1) {
+                const [topRoomUpdated] = roomList.splice(sendIndex, 1);
+                roomList.unshift({
+                    ...topRoomUpdated,
+                    highlight: false,
+                    message: 0
+                });
+            }
         });
         return roomList;
+    }
+
+    const handleCreateGroup = (room: RoomDisplay) => {
+        // Set room mới lên đầu danh sách (Đã có trong redux)
+        chatService.createGroup(room.chat.name)
+            .then((newGroup) => {
+                console.log('Group created:', newGroup);
+                dispatch(addNewRoom(room));
+                setIsCreateGroup(true);
+            })
+            .catch((error) => {
+                console.error('Error creating group:', error);
+            })
     }
 
     function handleDropdownClose() {
@@ -163,6 +194,7 @@ const RoomList = () => {
         setAnchorEl(null);
 
     }
+
     function handleCrateGroup() {
         handleButtonClick(1)
         setAnchorEl(null);
@@ -197,13 +229,14 @@ const RoomList = () => {
             }}>
                 <Box sx={{paddingY: 2}}>
 
-                    <OutlinedInput placeholder="Search" value={searchKeyWord}  size="medium" onChange={handleInputSearch}/>
+                    <OutlinedInput placeholder="Search" value={searchKeyWord} size="medium"
+                                   onChange={handleInputSearch}/>
                 </Box>
 
                 <Box display="flex" alignItems="center">
                     <Tooltip title="Option">
                         <IconButton
-                            onClick={(e) =>     setAnchorEl(e.currentTarget)}
+                            onClick={(e) => setAnchorEl(e.currentTarget)}
                             aria-controls={open ? 'account-menu' : undefined}
                             aria-haspopup="true"
                             aria-expanded={open ? 'true' : undefined}
@@ -243,19 +276,19 @@ const RoomList = () => {
                                 },
                             },
                         }}
-                        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                        transformOrigin={{horizontal: 'right', vertical: 'top'}}
+                        anchorOrigin={{horizontal: 'right', vertical: 'bottom'}}
                     >
 
                         <MenuItem onClick={handleAddPerson}>
                             <ListItemIcon>
-                                <PersonAdd fontSize="small" />
+                                <PersonAdd fontSize="small"/>
                             </ListItemIcon>
                             Add people
                         </MenuItem>
                         <MenuItem onClick={handleCrateGroup}>
                             <ListItemIcon>
-                                <GroupAddIcon fontSize="small" />
+                                <GroupAddIcon fontSize="small"/>
                             </ListItemIcon>
                             Create group
                         </MenuItem>
@@ -313,7 +346,7 @@ const RoomList = () => {
                                 <RoomItem active={target == displayRoom.chat.name} data={displayRoom}
                                           chatType={value}
                                           key={displayRoom.chat.name}
-                                          />)}
+                                />)}
                         </List>
                     </TabPanel>
                     <TabPanel value={ChatType.Group} sx={{padding: 0}}>
@@ -322,7 +355,7 @@ const RoomList = () => {
                                 <RoomItem active={target == displayRoom.chat.name} data={displayRoom}
                                           chatType={value}
                                           key={displayRoom.chat.name}
-                                         />)}
+                                />)}
                         </List>
                     </TabPanel>
                 </TabContext>

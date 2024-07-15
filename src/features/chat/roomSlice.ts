@@ -15,7 +15,7 @@ const roomSlice = createSlice({
     initialState,
     reducers: {
         addNewRoom(state, action: PayloadAction<RoomDisplay>) {
-            state.roomList = [...state.roomList, action.payload];
+            state.roomList = [action.payload, ...state.roomList];
         },
         addRooms(state, action: PayloadAction<RoomDisplay[]>) {
             state.roomList = action.payload;

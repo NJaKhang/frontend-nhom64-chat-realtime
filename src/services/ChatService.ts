@@ -1,4 +1,3 @@
-import {ChatType} from "@constants/ChatType.ts";
 import {SocketEvent} from "@constants/SocketEvent.ts";
 import Message from "@models/Message.ts";
 import RoomChat from "@models/RoomChat.ts";
@@ -31,6 +30,20 @@ class ChatService {
             mes: message,
             to: target
 
+        })
+    }
+
+    async createGroup(name: string): Promise<RoomChat> {
+        const data = { name: name }
+        return new Promise<RoomChat>((resolve, reject) => {
+            socketService.send(SocketEvent.CreateRoom, data, {
+                onError: error => {
+                    reject(error)
+                },
+                onSuccess: (response: SocketResponse<RoomChat>) => {
+                    resolve(response.data);
+                }
+            })
         })
     }
 

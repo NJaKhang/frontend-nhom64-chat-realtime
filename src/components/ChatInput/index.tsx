@@ -11,6 +11,7 @@ import Picker from "emoji-picker-react"
 import {EmojiClickData} from "emoji-picker-react/src/types/exposedTypes.ts";
 import {FormEvent, useEffect, useState} from 'react';
 import style from "./style.ts";
+import {useAppDispatch} from "@redux/store.ts";
 
 interface ChatInputProps {
     onSubmit: (message: Message) => void
@@ -21,6 +22,8 @@ const ChatInput = ({onSubmit}: ChatInputProps) => {
     const [showPicker, setShowPicker] = useState(false);
     const {target, type} = useChatSelector();
     const {user} = useAuthSelector();
+    const dispatch = useAppDispatch();
+    const {addNewMessage} = useChatAction()
 
     useEffect(() => {
         setMessage("")
@@ -32,6 +35,7 @@ const ChatInput = ({onSubmit}: ChatInputProps) => {
             return;
         chatService.sendMessage(message, target);
         setMessage("")
+
         const messageObject: Message = {
             createAt: new Date().toDateString(),
             id: 0,
@@ -40,6 +44,7 @@ const ChatInput = ({onSubmit}: ChatInputProps) => {
             to: target,
             type: type
         }
+        dispatch(addNewMessage(messageObject))
         onSubmit(messageObject)
 
 
