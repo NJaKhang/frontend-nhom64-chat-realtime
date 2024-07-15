@@ -51,6 +51,7 @@ class SocketService {
             this.handleError(data as SocketError)
         } else {
             if(data.event == SocketEvent.SendChat){
+                console.log(data)
                 this.receiveMessageHandler && this.receiveMessageHandler(data.data)
             } else {
                 this.handleSuccess(data as SocketResponse<never>);
@@ -66,6 +67,13 @@ class SocketService {
         const {onError, onSuccess} = option
         onSuccess && this.successHandlers.set(event, onSuccess)
         onError && this.errorHandlers.set(event, onError)
+        console.log(JSON.stringify({
+            action,
+            data: {
+                event,
+                data
+            }
+        }))
         this.socket.send(JSON.stringify({
             action,
             data: {

@@ -30,7 +30,7 @@ const ChatInput = ({onSubmit}: ChatInputProps) => {
         e.preventDefault();
         if (!message)
             return;
-        chatService.sendMessage(message, target);
+        chatService.sendMessage(message, target, type);
         setMessage("")
         const messageObject: Message = {
             createAt: new Date().toDateString(),

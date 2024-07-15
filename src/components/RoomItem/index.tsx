@@ -3,7 +3,7 @@ import {useChatAction} from "@features/chat/chatSlice.ts";
 import {Avatar, Chip, ListItem, ListItemAvatar, ListItemButton, ListItemText, Typography} from "@mui/material";
 import {useAppDispatch} from "@redux/store.ts";
 import React, {useCallback} from 'react';
-import {useRoomAction, useRoomSelector} from "@features/chat/roomSlice.ts";
+import {useRoomAction} from "@features/chat/roomSlice.ts";
 import {RoomDisplay} from "../../layouts/RoomList";
 
 
@@ -23,10 +23,8 @@ const RoomItem = ({data, chatType, active}: RoomItemProps) => {
 
 
     const stringToColor = useCallback((string: string) => {
-
         let hash = 0;
         let i;
-
         /* eslint-disable no-bitwise */
         for (i = 0; i < string.length; i += 1) {
             hash = string.charCodeAt(i) + ((hash << 5) - hash);
@@ -39,7 +37,6 @@ const RoomItem = ({data, chatType, active}: RoomItemProps) => {
             color += `00${value.toString(16)}`.slice(-2);
         }
         /* eslint-enable no-bitwise */
-        console.log(color)
         return color;
     }, [])
 
@@ -48,8 +45,9 @@ const RoomItem = ({data, chatType, active}: RoomItemProps) => {
         return {
             sx: {
                 bgcolor: stringToColor(name),
-                width: "38px",
-                height: "38px",
+                fontSize: "18px",
+                width: "44px",
+                height: "44px",
             },
             children: `${name[0]}${name[1]}`.toUpperCase(),
         };
@@ -68,14 +66,7 @@ const RoomItem = ({data, chatType, active}: RoomItemProps) => {
             <ListItemButton onClick={() => handleClick()} selected={active} sx={{borderRadius: 2}}>
                 <ListItemAvatar>
                     <Avatar {...stringAvatar(data.chat.name)}/>
-
                 </ListItemAvatar>
-
-                <div>
-                    <p>
-
-                    </p>
-                </div>
                 <ListItemText
                     primary={data.chat.name}
                     secondary={

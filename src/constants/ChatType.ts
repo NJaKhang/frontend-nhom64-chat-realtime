@@ -1,5 +1,5 @@
 
 export  enum ChatType{
-    Group = "group",
+    Group = "room",
     People = "people"
 }

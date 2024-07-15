@@ -1,9 +1,8 @@
 import {ChatType} from "@constants/ChatType.ts";
-import {useChatSelector} from "@features/chat/chatSlice.ts";
+import {useChatAction, useChatSelector} from "@features/chat/chatSlice.ts";
 import RoomChat from "@models/RoomChat.ts";
 import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
 import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import {TabContext, TabPanel} from "@mui/lab";
@@ -16,8 +15,13 @@ import {
     DialogContentText,
     DialogTitle,
     IconButton,
-    List, ListItemIcon, Menu, MenuItem, OutlinedInput,
-    TextField, Tooltip,
+    List,
+    ListItemIcon,
+    Menu,
+    MenuItem,
+    OutlinedInput,
+    TextField,
+    Tooltip,
     Typography
 } from "@mui/material";
 import Tab from '@mui/material/Tab';
@@ -29,9 +33,8 @@ import {useRoomAction, useRoomSelector} from "@features/chat/roomSlice.ts";
 import {useAppDispatch} from "@redux/store.ts";
 import Message from "@models/Message.ts";
 import {useAuthSelector} from "@features/auth/authSlice.ts";
-import {JoinInner, Logout, PersonAdd, Settings} from "@mui/icons-material";
-import {set} from "lodash";
-
+import {PersonAdd} from "@mui/icons-material";
+import ChatBubbleOutlineOutlinedIcon from '@mui/icons-material/ChatBubbleOutlineOutlined';
 export interface RoomDisplay {
     chat: RoomChat,
     highlight: boolean
@@ -48,20 +51,23 @@ const initialNewRoom: RoomDisplay = {
     message: 0
 };
 
+const chatType = [ChatType.People, ChatType.Group]
+
 const RoomList = () => {
 
     const [value, setValue] = React.useState(ChatType.People);
     const [searchKeyWord, setSearchKeyWord] = useState<string>("");
     const [openModal, setOpenModal] = React.useState(false);
-    const [type, setType] = useState<ChatType>(ChatType.People);
-    const [newRoom, setNewRoom] = useState<RoomDisplay>(initialNewRoom);
-    const {target, newMessages} = useChatSelector()
+    const {target, newMessages, type} = useChatSelector()
     const dispatch = useAppDispatch();
     const {addNewRoom, addRooms} = useRoomAction();
     const {roomList} = useRoomSelector()
+    const {setTarget} = useChatAction()
     const {user} = useAuthSelector()
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
+    const [modalValue, setModalValue] = useState("")
+    const [action, setAction] = useState(0)
 
     useEffect(() => {
         chatService.findRoomChat().then((rooms) => {
@@ -74,6 +80,10 @@ const RoomList = () => {
         });
     }, []);
 
+    const check = (room: RoomDisplay, message: Message) => {
+        return (room.chat.name === message.name && room.chat.type === 0) || (room.chat.name === message.to && room.chat.type === 1)
+    }
+
     // Effect đẩy dữ liệu người mới vừa nhắn lên trên đầu
     useEffect(() => {
         dispatch(addRooms(handleNewMessage([...roomList])));
@@ -83,55 +93,65 @@ const RoomList = () => {
         setValue(newValue);
     };
 
-    const handleButtonClick = (cType: number) => {
-        const chatType = (cType === 0) ? ChatType.People : ChatType.Group;
-        setType(chatType);
-        setNewRoom(prevState => ({
-            ...prevState,
-            chat: {
-                ...prevState.chat,
-                type: cType
-            }
-        }));
-        console.log(newRoom);
-        handleClickOpen();
-    }
 
     useEffect(() => {
         setSearchKeyWord("")
     }, [target]);
 
-    const handleClickOpen = () => {
-        setOpenModal(true);
-    };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const name = e.target.value;
-        setNewRoom(prevState => ({
-            ...prevState,
-            chat: {
-                ...prevState.chat,
-                name: name
-            }
-        }));
-    }
 
     const handleSubmit = () => {
-        // Thêm vào RoomDisplay
-        const room: RoomDisplay = {
-            chat: {
-                name: newRoom.chat.name,
-                type: newRoom.chat.type,
-                actionTime: newRoom.chat.actionTime
-            },
-            highlight: true,
-            message: 0
-        };
-        console.log(room);
-        // Set room mới lên đầu danh sách
-        // Gửi new room vào store
-        dispatch(addNewRoom(room));
-        handleClose();
+        if (!modalValue) {
+            setOpenModal(false)
+            return;
+        }
+        if (action == 0) {
+            dispatch(addNewRoom({
+                chat: {
+                    name: modalValue,
+                    type: 0,
+                    actionTime: new Date()
+                },
+                highlight: false,
+                message: 0
+            }))
+            dispatch(setTarget({target: modalValue, type: ChatType.People}))
+            setOpenModal(false)
+
+
+        } else if (action == 1) {
+            chatService.createGroup(modalValue)
+                .then((data) => {
+                    dispatch(addNewRoom({
+                        chat: {
+                            name: data.name,
+                            type: 1,
+                            actionTime: new Date()
+                        },
+                        highlight: false,
+                        message: 0
+                    }))
+                    dispatch(setTarget({target: data.name, type: ChatType.Group}))
+                })
+                .finally(() => setOpenModal(false))
+        } else if (action == 2) {
+            console.log(modalValue)
+            chatService.joinRoom(modalValue)
+                .then((data) => {
+                    dispatch(addNewRoom({
+                        chat: {
+                            name: data.name,
+                            type: 1,
+                            actionTime: new Date()
+                        },
+                        highlight: false,
+                        message: 0
+                    }))
+                    dispatch(setTarget({target: data.name, type: ChatType.Group}))
+                })
+                .finally(() => setOpenModal(false))
+        }
+        setModalValue("");
     }
 
     const handleClose = () => {
@@ -140,13 +160,13 @@ const RoomList = () => {
 
     const handleNewMessage = (roomList: RoomDisplay[]) => {
         newMessages.forEach((message: Message) => {
-            const index = roomList.findIndex(room => room.chat.name === message.name);
+            const index = roomList.findIndex(room => check(room, message));
             if (index > -1) {
                 const [topRoomUpdated] = roomList.splice(index, 1);
                 roomList.unshift({
                     ...topRoomUpdated,
                     highlight: true,
-                    message: newMessages.filter(m => m.name === topRoomUpdated.chat.name).length
+                    message: newMessages.filter(m => check(topRoomUpdated, m)).length
                 });
             }
         });
@@ -159,21 +179,44 @@ const RoomList = () => {
     }
 
     function handleAddPerson() {
-        handleButtonClick(0)
+        setAction(0)
+        setOpenModal(true)
         setAnchorEl(null);
 
     }
     function handleCrateGroup() {
-        handleButtonClick(1)
+        setAction(1)
+        setOpenModal(true)
         setAnchorEl(null);
 
     }
+
+    function handleJoinGroup() {
+        setAction(2)
+        setOpenModal(true)
+        setAnchorEl(null);
+
+    }
+
 
     const handleInputSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         setSearchKeyWord(value);
     }
 
+
+    function renderModelLabel() {
+        switch (action) {
+            case 0:
+                return "Add people"
+            case 1:
+                return "Add group"
+            case 2:
+                return "Join group"
+            default:
+                return "";
+        }
+    }
 
     return (
         <Box sx={{
@@ -259,7 +302,7 @@ const RoomList = () => {
                             </ListItemIcon>
                             Create group
                         </MenuItem>
-                        <MenuItem onClick={handleAddPerson}>
+                        <MenuItem onClick={handleJoinGroup}>
                             <ListItemIcon>
                                 <GroupAddIcon fontSize="small"/>
                             </ListItemIcon>
@@ -276,17 +319,17 @@ const RoomList = () => {
                             fontWeight: "bold",
                             fontSize: "20px"
                         }}>
-                            {type === ChatType.People ? "Add new people" : "Add new group"}
+                            {renderModelLabel()}
                         </DialogTitle>
                         <DialogContent>
                             <DialogContentText id="alert-dialog-description" sx={{paddingTop: "10px"}}>
                                 <TextField
                                     id="outlined-basic"
-                                    label={type === ChatType.People ? "Add new people" : "Add new group"}
+                                    label={renderModelLabel()}
                                     variant="outlined"
                                     sx={{width: 300}}
                                     name={"name"}
-                                    onChange={handleInputChange}
+                                    onChange={(e) => setModalValue(e.target.value)}
                                 />
                             </DialogContentText>
                         </DialogContent>
@@ -303,6 +346,7 @@ const RoomList = () => {
             <Box sx={{flex: 1}}>
                 <TabContext value={value}>
                     <Tabs value={value} onChange={handleChange} aria-label="icon tabs example" variant="fullWidth">
+                        <Tab icon={<ChatBubbleOutlineOutlinedIcon fontSize="small"/>} aria-label="favorite" value={null}/>
                         <Tab icon={<PersonOutlineOutlinedIcon fontSize="small"/>} value={ChatType.People}
                              aria-label="phone"/>
                         <Tab icon={<GroupOutlinedIcon fontSize="small"/>} aria-label="favorite" value={ChatType.Group}/>
@@ -310,7 +354,8 @@ const RoomList = () => {
                     <TabPanel value={ChatType.People} sx={{padding: 0}}>
                         <List sx={{width: '100%', maxWidth: 360, bgcolor: 'background.paper'}}>
                             {roomList.filter(displayRoom => displayRoom.chat.type === 0 && displayRoom.chat.name != user.name && (displayRoom.chat.name.toLowerCase().includes(searchKeyWord.toLowerCase()))).map((displayRoom) =>
-                                <RoomItem active={target == displayRoom.chat.name} data={displayRoom}
+                                <RoomItem active={target == displayRoom.chat.name}
+                                          data={displayRoom}
                                           chatType={value}
                                           key={displayRoom.chat.name}
                                           />)}
@@ -319,10 +364,21 @@ const RoomList = () => {
                     <TabPanel value={ChatType.Group} sx={{padding: 0}}>
                         <List sx={{width: '100%', maxWidth: 360, bgcolor: 'background.paper'}}>
                             {roomList.filter(displayRoom => displayRoom.chat.type === 1 && displayRoom.chat.name != user.name && (displayRoom.chat.name.toLowerCase().includes(searchKeyWord.toLowerCase()))).map((displayRoom) =>
-                                <RoomItem active={target == displayRoom.chat.name} data={displayRoom}
+                                <RoomItem active={target == displayRoom.chat.name}
+                                          data={displayRoom}
                                           chatType={value}
                                           key={displayRoom.chat.name}
                                          />)}
+                        </List>
+                    </TabPanel>
+                    <TabPanel value={null} sx={{padding: 0}}>
+                        <List sx={{width: '100%', maxWidth: 360, bgcolor: 'background.paper'}}>
+                            {roomList.filter(displayRoom => displayRoom.chat.name != user.name && (displayRoom.chat.name.toLowerCase().includes(searchKeyWord.toLowerCase()))).map((displayRoom) =>
+                                <RoomItem active={target == displayRoom.chat.name}
+                                          data={displayRoom}
+                                          chatType={value}
+                                          key={displayRoom.chat.name}
+                                />)}
                         </List>
                     </TabPanel>
                 </TabContext>
