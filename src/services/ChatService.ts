@@ -3,6 +3,7 @@ import Message from "@models/Message.ts";
 import RoomChat from "@models/RoomChat.ts";
 import {SocketResponse} from "@models/SocketResponse.ts";
 import socketService from "@services/SocketService.ts";
+import {RoomMessageInfo} from "@models/RoomMessage.ts";
 
 class ChatService {
     async findPeopleChats(name: string, page: number = 1) {
@@ -24,6 +25,26 @@ class ChatService {
         })
     }
 
+    async findRoomChats(name: string, page: number = 1) {
+        return new Promise<RoomMessageInfo>((resolve, reject) => {
+            socketService.send(SocketEvent.GetRoomMessage,
+                {
+                    page,
+                    name
+                },
+                {
+                    onSuccess: (data: SocketResponse<never>) => {
+                        const roomMessageInfo = data.data as RoomMessageInfo
+                        resolve(roomMessageInfo)
+                    },
+                    onError: data => {
+                        reject(data)
+                    }
+                }
+            )
+        })
+    }
+
     sendMessage(message: string, target: string) {
         socketService.send(SocketEvent.SendChat, {
             type: "people",
@@ -35,16 +56,30 @@ class ChatService {
 
     sendRoomMessage(message: string, room: string) {
         socketService.send(SocketEvent.SendChat, {
-            type: "people",
+            type: "room",
             mes: message,
             to: room
         })
     }
 
     async createGroup(name: string): Promise<RoomChat> {
-        const data = { name: name }
+        const data = {name: name}
         return new Promise<RoomChat>((resolve, reject) => {
             socketService.send(SocketEvent.CreateRoom, data, {
+                onError: error => {
+                    reject(error)
+                },
+                onSuccess: (response: SocketResponse<RoomChat>) => {
+                    resolve(response.data);
+                }
+            })
+        })
+    }
+
+    async joinGroup(name: string): Promise<RoomChat> {
+        const data = {name: name}
+        return new Promise<RoomChat>((resolve, reject) => {
+            socketService.send(SocketEvent.JoinRoom, data, {
                 onError: error => {
                     reject(error)
                 },

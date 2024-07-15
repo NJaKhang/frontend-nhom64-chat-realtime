@@ -4,4 +4,5 @@ export interface SocketResponse<T> {
     data: T
     event: SocketEvent
     status: string;
+    chatData?: T
 }

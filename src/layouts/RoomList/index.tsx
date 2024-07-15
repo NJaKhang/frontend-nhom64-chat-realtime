@@ -3,7 +3,6 @@ import {useChatSelector} from "@features/chat/chatSlice.ts";
 import RoomChat from "@models/RoomChat.ts";
 import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
 import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import {TabContext, TabPanel} from "@mui/lab";
@@ -16,8 +15,13 @@ import {
     DialogContentText,
     DialogTitle,
     IconButton,
-    List, ListItemIcon, Menu, MenuItem, OutlinedInput,
-    TextField, Tooltip,
+    List,
+    ListItemIcon,
+    Menu,
+    MenuItem,
+    OutlinedInput,
+    TextField,
+    Tooltip,
     Typography
 } from "@mui/material";
 import Tab from '@mui/material/Tab';
@@ -27,10 +31,9 @@ import React, {useEffect, useState} from 'react';
 import RoomItem from "../../components/RoomItem";
 import {useRoomAction, useRoomSelector} from "@features/chat/roomSlice.ts";
 import {useAppDispatch} from "@redux/store.ts";
-import Message from "@models/Message.ts";
 import {useAuthSelector} from "@features/auth/authSlice.ts";
-import {JoinInner, Logout, PersonAdd, Settings} from "@mui/icons-material";
-import {set} from "lodash";
+import {PersonAdd} from "@mui/icons-material";
+import {AddType} from "@constants/AddType.ts";
 
 export interface RoomDisplay {
     chat: RoomChat,
@@ -52,8 +55,8 @@ const RoomList = () => {
 
     const [value, setValue] = React.useState(ChatType.People);
     const [searchKeyWord, setSearchKeyWord] = useState<string>("");
+    const [addType, setAddType] = useState<AddType>(null);
     const [openModal, setOpenModal] = React.useState(false);
-    const [isCreateGroup, setIsCreateGroup] = useState<boolean>(false);       // State kiểm tra người dùng thêm mói group (Để bỏ qua việc useEffect handle cả lần render mặc định đầu tiên
     const [type, setType] = useState<ChatType>(ChatType.People);
     const [newRoom, setNewRoom] = useState<RoomDisplay>(initialNewRoom);
     const {target, newMessages} = useChatSelector()
@@ -79,14 +82,6 @@ const RoomList = () => {
     useEffect(() => {
         dispatch(addRooms(handleNewMessage([...roomList])));
     }, [newMessages]);
-
-    // Effect đẩy dữ liệu
-
-    useEffect(() => {
-        if (isCreateGroup) {
-            console.log("Add Group")
-        }
-    }, [isCreateGroup]);
 
     const handleChange = (event: React.SyntheticEvent, newValue: ChatType) => {
         setValue(newValue);
@@ -137,7 +132,18 @@ const RoomList = () => {
             message: 0
         };
         console.log(room);
-        handleCreateGroup(room);
+
+        switch (addType) {
+            case AddType.AddPerson:
+                handleAddPeople(room);
+                break;
+            case AddType.CreateRoom:
+                handleCreateGroup(room);
+                break;
+            case AddType.JoinRoom:
+                break;
+        }
+
         handleClose();
     }
 
@@ -146,8 +152,17 @@ const RoomList = () => {
     };
 
     const handleNewMessage = (roomList: RoomDisplay[]) => {
-        newMessages.forEach((message: Message) => {
-            const receiveIndex = roomList.findIndex(room => room.chat.name === message.name);
+        if (newMessages.length > 0) {
+            const mesNotify = [...newMessages].pop();
+            let receiveIndex: number;
+
+            // Logic tìm vị trí tin nhắn mới cho type people (Do sử dụng giũa type dạng number (server trả về) và type dạng ChatType nên ở đây cần handle thêm, bị lẫn lộn)
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            if (mesNotify.type === ChatType.People || mesNotify.type == 0) {
+                receiveIndex = roomList.findIndex(room => room.chat.name === mesNotify.name);
+            }
+
             if (receiveIndex > -1) {
                 const [topRoomUpdated] = roomList.splice(receiveIndex, 1);
                 roomList.unshift({
@@ -156,18 +171,7 @@ const RoomList = () => {
                     message: newMessages.filter(m => m.name === topRoomUpdated.chat.name).length
                 });
             }
-
-            // Phải để sendIndex xuống sau khi xử lý xong receiveIndex
-            const sendIndex = roomList.findIndex(room => room.chat.name === message.to)
-            if (sendIndex > -1) {
-                const [topRoomUpdated] = roomList.splice(sendIndex, 1);
-                roomList.unshift({
-                    ...topRoomUpdated,
-                    highlight: false,
-                    message: 0
-                });
-            }
-        });
+        }
         return roomList;
     }
 
@@ -177,11 +181,14 @@ const RoomList = () => {
             .then((newGroup) => {
                 console.log('Group created:', newGroup);
                 dispatch(addNewRoom(room));
-                setIsCreateGroup(true);
             })
             .catch((error) => {
                 console.error('Error creating group:', error);
             })
+    }
+
+    const handleAddPeople = (people: RoomDisplay) => {
+        dispatch(addNewRoom(people));
     }
 
     function handleDropdownClose() {
@@ -189,16 +196,23 @@ const RoomList = () => {
 
     }
 
-    function handleAddPerson() {
+    function handleAddPersonClick() {
+        setAddType(AddType.AddPerson);
         handleButtonClick(0)
         setAnchorEl(null);
 
     }
 
-    function handleCrateGroup() {
+    function handleCreateGroupClick() {
+        setAddType(AddType.CreateRoom)
         handleButtonClick(1)
         setAnchorEl(null);
+    }
 
+    function handleJoinGroupClick() {
+        setAddType(AddType.JoinRoom)
+        handleButtonClick(1)
+        setAnchorEl(null);
     }
 
     const handleInputSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -280,19 +294,19 @@ const RoomList = () => {
                         anchorOrigin={{horizontal: 'right', vertical: 'bottom'}}
                     >
 
-                        <MenuItem onClick={handleAddPerson}>
+                        <MenuItem onClick={handleAddPersonClick}>
                             <ListItemIcon>
                                 <PersonAdd fontSize="small"/>
                             </ListItemIcon>
                             Add people
                         </MenuItem>
-                        <MenuItem onClick={handleCrateGroup}>
+                        <MenuItem onClick={handleCreateGroupClick}>
                             <ListItemIcon>
                                 <GroupAddIcon fontSize="small"/>
                             </ListItemIcon>
                             Create group
                         </MenuItem>
-                        <MenuItem onClick={handleAddPerson}>
+                        <MenuItem onClick={handleJoinGroupClick}>
                             <ListItemIcon>
                                 <GroupAddIcon fontSize="small"/>
                             </ListItemIcon>

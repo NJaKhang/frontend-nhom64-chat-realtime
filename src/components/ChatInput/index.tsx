@@ -12,6 +12,7 @@ import {EmojiClickData} from "emoji-picker-react/src/types/exposedTypes.ts";
 import {FormEvent, useEffect, useState} from 'react';
 import style from "./style.ts";
 import {useAppDispatch} from "@redux/store.ts";
+import {ChatType} from "@constants/ChatType.ts";
 
 interface ChatInputProps {
     onSubmit: (message: Message) => void
@@ -34,7 +35,7 @@ const ChatInput = ({onSubmit}: ChatInputProps) => {
         if (!message)
             return;
         console.log("Loại chat: ", type);
-        chatService.sendMessage(message, target);
+        (type === ChatType.People) ? chatService.sendMessage(message, target) : chatService.sendRoomMessage(message, target);
         setMessage("")
 
         const messageObject: Message = {

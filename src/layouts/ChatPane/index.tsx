@@ -8,8 +8,6 @@ import socketService from "@services/SocketService.ts";
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import ChatHeader from "../../components/ChatHeader";
 import ChatInput from "../../components/ChatInput";
-import MessageScroll from "../../components/MessageScroll";
-import ChatService from "@services/ChatService.ts";
 import InfiniteScroll from "react-infinite-scroll-component";
 import Message from "../../components/Message/Message.tsx";
 import {useAuthSelector} from "@features/auth/authSlice.ts";
@@ -30,18 +28,35 @@ const ChatPane = () => {
         setLoading(true)
         setPage(1)
         setHasMore(false)
-        chatService.findPeopleChats(target)
-            .then((data) => {
-                setMessages(data)
-                if (data.length == 50) {
-                    setHasMore(true)
-                } else {
-                    setHasMore(false)
+        if (type === ChatType.People) {
+            chatService.findPeopleChats(target)
+                .then((data) => {
+                    setMessages(data)
+                    if (data.length == 50) {
+                        setHasMore(true)
+                    } else {
+                        setHasMore(false)
 
-                }
-            })
-            .then(() => setLoading(false))
-            .catch((error) => console.log(error))
+                    }
+                })
+                .then(() => setLoading(false))
+                .catch((error) => console.log(error))
+
+        } else {
+            chatService.findRoomChats(target)
+                .then((data) => {
+                    const roomMessages = data.chatData;
+                    setMessages(roomMessages)
+                    if (roomMessages.length === 50) {
+                        setHasMore(true)
+                    } else {
+                        setHasMore(false)
+
+                    }
+                })
+                .then(() => setLoading(false))
+                .catch((error) => console.log(error))
+        }
 
         socketService.receiveMessageHandler = (message) => {
             console.log(message)
@@ -52,8 +67,6 @@ const ChatPane = () => {
                 dispatch(addNewMessage(message));
 
             }
-
-
         }
 
         dispatch(removeNewMessage({target, type}))
@@ -99,7 +112,7 @@ const ChatPane = () => {
                     setHasMore(false)
                 setMessages(prevState => [...prevState, ...data]);
                 setPage(page + 1)
-        })
+            })
     }, [hasMore, page, target, type])
     return (
         <Box sx={{
@@ -120,12 +133,13 @@ const ChatPane = () => {
                     }}
                 >
                     <ChatHeader/>
-                    <Box sx={{overflow: "auto", display: "flex", flexDirection: "column-reverse", gap: 1, paddingY: 2}} id="container">
+                    <Box sx={{overflow: "auto", display: "flex", flexDirection: "column-reverse", gap: 1, paddingY: 2}}
+                         id="container">
 
                         <InfiniteScroll
                             dataLength={messages.length}
                             next={loadMore}
-                            style={{ display: 'flex', flexDirection: 'column-reverse', gap: "8px" }}
+                            style={{display: 'flex', flexDirection: 'column-reverse', gap: "8px"}}
                             inverse={true} //
                             hasMore={hasMore}
                             loader={<h4>Loading...</h4>}
