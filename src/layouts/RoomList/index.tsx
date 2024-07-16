@@ -18,7 +18,7 @@ import {
     List,
     ListItemIcon,
     Menu,
-    MenuItem,
+    MenuItem
     OutlinedInput,
     TextField,
     Tooltip,
@@ -198,7 +198,6 @@ const RoomList = () => {
         setSearchKeyWord(value);
     }
 
-
     function renderModelLabel() {
         switch (action) {
             case 0:
@@ -240,6 +239,7 @@ const RoomList = () => {
 
                 <Box display="flex" alignItems="center">
                     <Tooltip title="Option">
+
                         <IconButton
                             onClick={(e) =>     setAnchorEl(e.currentTarget)}
                             aria-controls={open ? 'account-menu' : undefined}

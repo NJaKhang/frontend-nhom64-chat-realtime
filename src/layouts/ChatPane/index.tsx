@@ -8,6 +8,8 @@ import socketService from "@services/SocketService.ts";
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 import ChatHeader from "../../components/ChatHeader";
 import ChatInput from "../../components/ChatInput";
+import MessageScroll from "../../components/MessageScroll";
+import ChatService from "@services/ChatService.ts";
 import InfiniteScroll from "react-infinite-scroll-component";
 import Message from "../../components/Message/Message.tsx";
 
@@ -115,7 +117,6 @@ const ChatPane = () => {
                     setPage(page + 1)
                 })
         }
-
     }, [hasMore, page, target, type])
     return (
         <Box sx={{
