@@ -24,6 +24,8 @@ class AvatarUtils {
                 fontSize: fontSize,
                 width: size,
                 height: size,
+                display: "gird",
+                placeItems: "center"
             },
             children: `${name[0]}${name[1]}`.toUpperCase(),
         };

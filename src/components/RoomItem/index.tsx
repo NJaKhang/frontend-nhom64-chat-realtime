@@ -5,6 +5,7 @@ import {useAppDispatch} from "@redux/store.ts";
 import React, {useCallback} from 'react';
 import {useRoomAction} from "@features/chat/roomSlice.ts";
 import {RoomDisplay} from "../../layouts/RoomList";
+import avatarUtils from "../../utils/AvatarUtils.ts";
 
 
 interface RoomItemProps {
@@ -22,36 +23,6 @@ const RoomItem = ({data, chatType, active}: RoomItemProps) => {
 
 
 
-    const stringToColor = useCallback((string: string) => {
-        let hash = 0;
-        let i;
-        /* eslint-disable no-bitwise */
-        for (i = 0; i < string.length; i += 1) {
-            hash = string.charCodeAt(i) + ((hash << 5) - hash);
-        }
-
-        let color = '#';
-
-        for (i = 0; i < 3; i += 1) {
-            const value = (hash >> (i * 8)) & 0xff;
-            color += `00${value.toString(16)}`.slice(-2);
-        }
-        /* eslint-enable no-bitwise */
-        return color;
-    }, [])
-
-    const stringAvatar = useCallback((name: string) => {
-
-        return {
-            sx: {
-                bgcolor: stringToColor(name),
-                fontSize: "18px",
-                width: "44px",
-                height: "44px",
-            },
-            children: `${name[0]}${name[1]}`.toUpperCase(),
-        };
-    }, [stringToColor])
 
     function handleClick() {
         dispatch(setHighlight({highlight: false, name: data.chat.name}))
@@ -65,7 +36,7 @@ const RoomItem = ({data, chatType, active}: RoomItemProps) => {
         >
             <ListItemButton onClick={() => handleClick()} selected={active} sx={{borderRadius: 2}}>
                 <ListItemAvatar>
-                    <Avatar {...stringAvatar(data.chat.name)}/>
+                    <Avatar {...avatarUtils.avatar(data.chat.name, "44px", "18px")}/>
                 </ListItemAvatar>
                 <ListItemText
                     primary={data.chat.name}

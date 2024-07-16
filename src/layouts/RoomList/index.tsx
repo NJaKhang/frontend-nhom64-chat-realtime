@@ -35,30 +35,23 @@ import Message from "@models/Message.ts";
 import {useAuthSelector} from "@features/auth/authSlice.ts";
 import {PersonAdd} from "@mui/icons-material";
 import ChatBubbleOutlineOutlinedIcon from '@mui/icons-material/ChatBubbleOutlineOutlined';
+import {enqueueSnackbar} from "notistack";
+
 export interface RoomDisplay {
     chat: RoomChat,
     highlight: boolean
     message: number;
 }
 
-const initialNewRoom: RoomDisplay = {
-    chat: {
-        name: "",
-        type: 0,
-        actionTime: new Date()
-    },
-    highlight: false,
-    message: 0
-};
 
-const chatType = [ChatType.People, ChatType.Group]
+
 
 const RoomList = () => {
 
     const [value, setValue] = React.useState(ChatType.People);
     const [searchKeyWord, setSearchKeyWord] = useState<string>("");
     const [openModal, setOpenModal] = React.useState(false);
-    const {target, newMessages, type} = useChatSelector()
+    const {target, newMessages} = useChatSelector()
     const dispatch = useAppDispatch();
     const {addNewRoom, addRooms} = useRoomAction();
     const {roomList} = useRoomSelector()
@@ -133,9 +126,9 @@ const RoomList = () => {
                     }))
                     dispatch(setTarget({target: data.name, type: ChatType.Group}))
                 })
+                .catch(reason => enqueueSnackbar(reason.mes, {variant: "error"}))
                 .finally(() => setOpenModal(false))
         } else if (action == 2) {
-            console.log(modalValue)
             chatService.joinRoom(modalValue)
                 .then((data) => {
                     dispatch(addNewRoom({
@@ -149,6 +142,7 @@ const RoomList = () => {
                     }))
                     dispatch(setTarget({target: data.name, type: ChatType.Group}))
                 })
+                .catch(reason => enqueueSnackbar(reason.mes, {variant: "error"}),)
                 .finally(() => setOpenModal(false))
         }
         setModalValue("");
@@ -222,6 +216,7 @@ const RoomList = () => {
         <Box sx={{
             gridArea: "room-list",
             width: "320px",
+            height: "100vh",
             padding: 2,
             display: "flex",
             flexDirection: "column"
@@ -342,17 +337,18 @@ const RoomList = () => {
                     </Dialog>
                 </Box>
             </Box>
+            <TabContext value={value}>
+                <Tabs value={value} onChange={handleChange} aria-label="icon tabs example" variant="fullWidth">
+                    <Tab icon={<ChatBubbleOutlineOutlinedIcon fontSize="small"/>} aria-label="favorite" value={null}/>
+                    <Tab icon={<PersonOutlineOutlinedIcon fontSize="small"/>} value={ChatType.People}
+                         aria-label="phone"/>
+                    <Tab icon={<GroupOutlinedIcon fontSize="small"/>} aria-label="favorite" value={ChatType.Group}/>
+                </Tabs>
 
-            <Box sx={{flex: 1}}>
-                <TabContext value={value}>
-                    <Tabs value={value} onChange={handleChange} aria-label="icon tabs example" variant="fullWidth">
-                        <Tab icon={<ChatBubbleOutlineOutlinedIcon fontSize="small"/>} aria-label="favorite" value={null}/>
-                        <Tab icon={<PersonOutlineOutlinedIcon fontSize="small"/>} value={ChatType.People}
-                             aria-label="phone"/>
-                        <Tab icon={<GroupOutlinedIcon fontSize="small"/>} aria-label="favorite" value={ChatType.Group}/>
-                    </Tabs>
-                    <TabPanel value={ChatType.People} sx={{padding: 0}}>
-                        <List sx={{width: '100%', maxWidth: 360, bgcolor: 'background.paper'}}>
+                <Box sx={{flex: 1, overflowY: "auto"}}>
+
+                    <TabPanel value={ChatType.People} sx={{padding: 0, overflowY: "auto"}}>
+                        <List sx={{width: '100%', maxWidth: 360, bgcolor: 'background.paper',}}>
                             {roomList.filter(displayRoom => displayRoom.chat.type === 0 && displayRoom.chat.name != user.name && (displayRoom.chat.name.toLowerCase().includes(searchKeyWord.toLowerCase()))).map((displayRoom) =>
                                 <RoomItem active={target == displayRoom.chat.name}
                                           data={displayRoom}
@@ -361,8 +357,8 @@ const RoomList = () => {
                                           />)}
                         </List>
                     </TabPanel>
-                    <TabPanel value={ChatType.Group} sx={{padding: 0}}>
-                        <List sx={{width: '100%', maxWidth: 360, bgcolor: 'background.paper'}}>
+                    <TabPanel value={ChatType.Group} sx={{padding: 0, overflowY: "auto"}}>
+                        <List sx={{width: '100%', maxWidth: 360, bgcolor: 'background.paper', overflowY: "auto"}}>
                             {roomList.filter(displayRoom => displayRoom.chat.type === 1 && displayRoom.chat.name != user.name && (displayRoom.chat.name.toLowerCase().includes(searchKeyWord.toLowerCase()))).map((displayRoom) =>
                                 <RoomItem active={target == displayRoom.chat.name}
                                           data={displayRoom}
@@ -371,8 +367,8 @@ const RoomList = () => {
                                          />)}
                         </List>
                     </TabPanel>
-                    <TabPanel value={null} sx={{padding: 0}}>
-                        <List sx={{width: '100%', maxWidth: 360, bgcolor: 'background.paper'}}>
+                    <TabPanel value={null} sx={{padding: 0, overflowY: "auto"}}>
+                        <List sx={{width: '100%', maxWidth: 360, bgcolor: 'background.paper', overflowY: "auto"}}>
                             {roomList.filter(displayRoom => displayRoom.chat.name != user.name && (displayRoom.chat.name.toLowerCase().includes(searchKeyWord.toLowerCase()))).map((displayRoom) =>
                                 <RoomItem active={target == displayRoom.chat.name}
                                           data={displayRoom}
@@ -381,8 +377,9 @@ const RoomList = () => {
                                 />)}
                         </List>
                     </TabPanel>
-                </TabContext>
             </Box>
+            </TabContext>
+
         </Box>
     );
 };

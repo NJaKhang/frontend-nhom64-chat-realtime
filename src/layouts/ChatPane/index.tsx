@@ -47,7 +47,6 @@ const ChatPane = () => {
                         setHasMore(true)
                     } else {
                         setHasMore(false)
-
                     }
                 })
                 .then(() => setLoading(false))
