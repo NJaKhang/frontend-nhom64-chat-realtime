@@ -28,6 +28,7 @@ class SocketService {
             this.onOpen && this.onOpen()
         }
 
+
         this.successHandlers = new Map<SocketEvent, SuccessHandler<never>>()
         this.errorHandlers = new Map<SocketEvent, ErrorHandler>()
     }
@@ -37,12 +38,19 @@ class SocketService {
         const handler = this.errorHandlers.get(error.event)
         this.successHandlers.set(error.event, undefined)
         handler && handler(error);
+        this.removeHandler(error.event);
     }
 
     handleSuccess(data: SocketResponse<never>) {
-        console.log(data)
         const handler = this.successHandlers.get(data.event)
         handler && handler(data);
+        this.removeHandler(data.event)
+    }
+
+    removeHandler(event: SocketEvent){
+        this.successHandlers.set(event, null)
+        this.errorHandlers.set(event, null)
+
     }
 
     handleReceive(ev: MessageEvent) {
@@ -58,6 +66,7 @@ class SocketService {
 
             }
         }
+
 
     }
 
